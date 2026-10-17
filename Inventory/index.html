@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#355f49">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Track household emergency supplies, chosen optimum levels, family meals and water reserves.">
+  <title>Home Reserves — Emergency Inventory</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon-192.png">
+  <link rel="stylesheet" href="./app.css">
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div><div class="eyebrow">HOUSEHOLD READINESS</div><h1>Home Reserves</h1><p class="subtitle">Your stock, your targets, your family meal plan.</p></div>
+      <button id="quickAdd" class="primary" type="button">+ Item</button>
+    </header>
+    <nav class="nav" aria-label="Main navigation">
+      <button type="button" data-tab="overview">Overview</button>
+      <button type="button" data-tab="inventory">Inventory</button>
+      <button type="button" data-tab="meals">Meals</button>
+      <button type="button" data-tab="settings">Settings</button>
+    </nav>
+    <div id="message" aria-live="polite"></div>
+    <div id="screen"></div>
+    <p class="footer-note">Data is saved on this device only. Export a backup regularly, especially before changing your phone.</p>
+  </main>
+  <dialog id="editor" aria-label="Edit record"><div id="editorBody"></div></dialog>
+  <script src="./app.js" defer></script>
+</body>
+</html>
