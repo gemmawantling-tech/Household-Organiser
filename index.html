@@ -1,6 +1,25 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Household Organiser</title><meta name="theme-color" content="#476c59"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png"><style>
-:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#25352e;background:#f4f6f2}*{box-sizing:border-box}body{margin:0}.app{max-width:820px;margin:auto;padding:18px 14px 60px}header{display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:1.65rem;margin:0}h2{font-size:1.12rem;margin:0 0 12px}.sub{color:#617168;font-size:.9rem;margin:5px 0 15px}.card{background:white;border:1px solid #dce5dd;border-radius:16px;padding:18px;margin:14px 0;box-shadow:0 2px 9px #24392a09}.tabs{display:flex;gap:5px;overflow-x:auto;padding:5px 0}.tabs button{white-space:nowrap}button,select,input{font:inherit}button{cursor:pointer;border:1px solid #ccd8cf;border-radius:9px;background:white;padding:9px 12px;color:#2c4838}button.active,.primary{background:#2c6147;color:white;border-color:#2c6147}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #86b69b}input,select{padding:10px;border:1px solid #cbd8cf;border-radius:9px;min-width:0}.bar{height:9px;background:#e2e9e2;border-radius:10px;overflow:hidden}.fill{height:100%;background:#4b9670;transition:width .2s}.muted{color:#64756a;font-size:.85rem}.task{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #edf0ec}.task:last-child{border-bottom:0}.task input[type=checkbox]{width:20px;height:20px;accent-color:#397a57;flex-shrink:0;margin-top:2px}.task label{flex:1;line-height:1.4}.done{text-decoration:line-through;color:#809087}.delete{border:0;color:#8b4d4d;padding:2px 7px;background:transparent;font-size:1.2rem}.add{display:flex;gap:7px;margin-top:13px}.add input{flex:1;width:0}.note{background:#eef4ee;border-radius:10px;padding:11px 13px;margin-top:12px;font-size:.85rem;color:#52665a}.row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}.shopping{background:#fbfcf9;border:1px solid #d8e4d8}.badge{font-size:.76rem;background:#eaf2eb;padding:5px 8px;border-radius:12px}.sectionHead{display:flex;justify-content:space-between;align-items:center}.small{font-size:.8rem}.danger{color:#9b4949}.hidden{display:none}@media(max-width:480px){.card{padding:14px}.app{padding:12px 10px 40px}.tabs button{padding:8px 10px}.add button{padding:9px}}
-</style></head><body><main class="app"><header><div><h1>🏡 Household Organiser</h1><p class="sub">Daily resets · Family jobs · Practical preparedness</p></div><span class="badge" id="date"></span></header><div class="tabs" id="tabs"></div><section class="card"><div class="row"><h2 id="heading">Today</h2><button id="todayBtn">Go to today</button></div><p class="muted" id="progressText"></p><div class="bar"><div class="fill" id="fill"></div></div></section><div id="sections"></div><section class="card shopping"><div class="sectionHead"><h2>🛒 Shopping list</h2><span class="badge" id="shoppingCount"></span></div><p class="muted">Your shopping list for this day. Add items, tick them off, or remove them.</p><div id="shoppingItems"></div><form class="add" id="shoppingForm"><input id="shoppingInput" placeholder="Add shopping item" aria-label="New shopping item" required><button class="primary">Add</button></form></section><p class="muted">Changes are saved in this browser on this device. To keep a backup, use Export backup. Clearing browser data may erase saved tasks.</p><div class="row"><button id="exportBtn">Export backup</button><label class="small">Import backup <input type="file" id="importInput" accept="application/json" style="max-width:190px"></label></div></main><script>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#476c59"><meta name="color-scheme" content="light"><title>Household Organiser</title><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" sizes="192x192" href="./icon-192.png">
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#23392e;background:#f2f5f0;--green:#316448;--pale:#eaf2e9;--edge:#dce6dc}*{box-sizing:border-box}body{margin:0}.app{max-width:780px;margin:auto;padding:16px 13px 60px}h1{font-size:1.7rem;margin:0;line-height:1.2}h2{font-size:1.13rem;margin:0 0 10px}h3{font-size:1rem;margin:0 0 8px}button,input,select,textarea{font:inherit}button{color:#294936;border:1px solid #cbdacf;background:white;border-radius:11px;padding:10px 13px;cursor:pointer;min-height:43px}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #8bbca2;outline-offset:1px}button:disabled{opacity:.55}button.primary,.active{background:var(--green);color:white;border-color:var(--green)}button.subtle{background:var(--pale)}input:not([type=checkbox]),select,textarea{border:1px solid #c5d5ca;border-radius:10px;padding:11px 10px;background:white;color:#25392e;min-width:0;width:100%;min-height:44px}input[type=checkbox]{width:21px;height:21px;accent-color:#357a55;flex-shrink:0;margin:3px 0 0}.card{background:#fff;border:1px solid var(--edge);border-radius:18px;padding:17px;margin:13px 0;box-shadow:0 2px 9px #233b2808}.top{display:flex;justify-content:space-between;align-items:center;gap:8px}.sub,.muted{color:#64776c}.sub{font-size:.87rem;margin:7px 0 13px}.muted{font-size:.84rem}.small{font-size:.78rem}.row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.dateBox{background:var(--pale);border-color:#d0e2d3}.dateLabel{font-size:1.2rem;font-weight:760;margin-bottom:3px}.dateControl{display:grid;grid-template-columns:52px minmax(0,1fr) 52px;gap:8px;align-items:center}.dateControl button{font-size:1.4rem}.dateControl input{font-weight:650;text-align:center}.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-top:12px}.week button{border-radius:12px;padding:8px 2px;min-width:0;line-height:1.2;font-size:.84rem}.week button b,.week button span{display:block}.week button b{font-size:1.07rem;margin-top:4px}.todayMark{box-shadow:inset 0 -3px #7ea48b}.sectionNav{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}.sectionNav button{font-weight:600}.bar{height:9px;background:#e3eae3;border-radius:10px;overflow:hidden}.fill{height:100%;background:#4b9670;transition:width .2s}.tag{background:var(--pale);border-radius:18px;padding:5px 10px;font-size:.8rem}.task{display:flex;align-items:flex-start;gap:9px;padding:11px 0;border-bottom:1px solid #edf0eb}.task:last-child{border-bottom:0}.task label{flex:1;line-height:1.45;word-break:break-word}.done{text-decoration:line-through;color:#829189}.quietIcon{border:0;background:transparent;min-height:28px;padding:2px 6px;font-size:1.1rem;color:#805756}.taskActions{display:flex;gap:0}.addForm{background:#f7faf7;padding:12px;border:1px solid #e0e9e0;border-radius:12px;margin-top:13px}.addForm label,.field label{display:block;font-size:.84rem;font-weight:640;margin:0 0 5px}.field{margin-bottom:10px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid2>*{min-width:0}.addForm button[type=submit]{width:100%;margin-top:4px}.callout{border-radius:13px;padding:12px 13px;background:#eff5ee;border:1px solid #d8e6d8}.event{padding:11px 0;border-top:1px solid #e9eee8;display:flex;gap:8px;align-items:center;justify-content:space-between}.event:first-child{border-top:0}.eventTitle{font-weight:700}.upcoming{display:grid;gap:7px}.upcoming button{display:flex;justify-content:space-between;text-align:left;gap:10px;width:100%;align-items:center}.upcoming span{font-size:.76rem;color:#607568}.shopping{background:#fcfdfa}.inline{display:flex;gap:8px}.inline input{flex:1}.sectionHeading{display:flex;justify-content:space-between;align-items:center;gap:10px}.mini{font-size:.79rem}.danger{color:#9a4949}.footer{margin-top:18px}.hidden{display:none!important}.empty{font-size:.87rem;color:#61746a;padding:6px 0}.m0{margin:0}.mt{margin-top:10px}.mb{margin-bottom:10px}.checknote{font-size:.8rem;color:#59705f;margin:7px 0 0}.notice{padding:8px 10px;margin-top:7px;font-size:.8rem;color:#526b57}@media(max-width:420px){.app{padding:12px 9px 46px}.card{padding:13px}.grid2{grid-template-columns:1fr}.week{gap:3px}.week button{padding:8px 1px;font-size:.72rem}.dateLabel{font-size:1.05rem}}
+
+.priorityCard{border:1px solid #b4d4bd;background:linear-gradient(145deg,#fff 30%,#f0f7f1);box-shadow:0 4px 16px #24533310}.priorityCard h2{margin-bottom:4px}.weeklyItem{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid #e4eae4}.weeklyItem:first-child{margin-top:8px}.weekDate{font-size:.74rem;white-space:nowrap;min-width:72px;padding:8px 5px;background:#eef4ed;font-weight:650;min-height:36px}.weeklyItem .weekText{flex:1;min-width:0;font-size:.89rem;line-height:1.35;overflow-wrap:anywhere}.weeklyItem input{width:20px;height:20px;accent-color:var(--green);flex-shrink:0}.sectionPill{color:#65786b;font-size:.7rem;background:#ecf3ec;border-radius:13px;padding:4px 7px;white-space:nowrap;align-self:center}.routineCard{background:#fefefe}.routineSummary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:8px;list-style:none}.routineSummary::-webkit-details-marker{display:none}.routineSummary:before{content:'▸';font-size:1.15rem;color:#567b60}.routineDetails[open] .routineSummary:before{content:'▾'}.routineSummary h2{flex:1;margin:0}.routineSummary+.checknote{margin:10px 0}.isStarred{color:#bd8d25}.routineCard h2{margin:0}.taskActions{align-items:center}.task .quietIcon{padding:3px 6px;min-width:28px}.priorityCard .grid2{grid-template-columns:1fr 1fr}.priorityCard .grid2 button{font-size:.85rem}@media(max-width:400px){.priorityCard .grid2{grid-template-columns:1fr 1fr}.priorityCard .grid2 button{padding:9px 5px;font-size:.78rem}.weekDate{min-width:65px}}
+</style></head><body><main class="app">
+<header><h1>🏡 Household Organiser</h1><p class="sub">Important jobs first · Routines tucked away · Shopping</p></header>
+<section class="card dateBox" aria-label="Choose a day"><div class="row mb"><div><div class="dateLabel" id="dateLabel"></div><div class="muted" id="dateContext">Choose any date, including future dates</div></div><button id="todayBtn">Today</button></div>
+<div class="dateControl"><button type="button" id="prevDay" aria-label="Previous day">‹</button><input type="date" id="datePicker" aria-label="Choose calendar date"><button type="button" id="nextDay" aria-label="Next day">›</button></div>
+<div class="week" id="weekStrip" aria-label="Dates this week"></div><p class="checknote">Tap a date or use the calendar to plan ahead. All dates have their own tick boxes.</p></section>
+<div class="sectionNav" role="group" aria-label="Choose checklist"><button id="dailyTab" class="active">Daily checklist</button><button id="monthlyTab">Monthly audit</button></div>
+<section class="card priorityCard" id="priorityCard"><div class="sectionHeading"><div><h2>⭐ Next 7 days · priorities</h2><span class="muted small" id="weekRange"></span></div><span class="tag" id="weekCount">0 ahead</span></div><p class="muted m0">One-off jobs, parties and anything you mark with ☆. Your usual routines stay below.</p><div id="weekItems"></div><div class="grid2 mt"><button class="primary" id="togglePriorityForm" type="button">+ Add an important job</button><button id="priorityEventBtn" type="button">+ Add a party / event</button></div><form id="priorityForm" class="addForm hidden"><div class="field"><label for="priorityText">What needs doing?</label><input id="priorityText" placeholder="e.g. Buy birthday cake" maxlength="250" required></div><div class="grid2"><div class="field"><label for="priorityDate">Which date?</label><input id="priorityDate" type="date" required></div><div class="field"><label for="prioritySection">When?</label><select id="prioritySection"><option value="Today's Jobs">Today's Jobs</option><option value="Morning Reset">Morning Reset</option><option value="Evening Reset">Evening Reset</option></select></div></div><div class="row"><button class="primary" type="submit">Save one-off job</button><button id="cancelPriority" type="button">Cancel</button></div></form></section>
+<section class="card" id="dailyFocusCard"><div class="sectionHeading"><h2>✅ Today's important jobs</h2><span class="tag" id="focusCount">0/0</span></div><p class="muted m0">Today's jobs and one-off reminders first. ☆ marks recurring jobs you want on your weekly priorities.</p><div id="dailyFocus"></div><button type="button" id="focusAddTask" class="subtle" style="width:100%;margin-top:9px">+ Add a job for a date</button></section>
+<section class="card" id="dailyEventCard"><div class="sectionHeading"><h2>📅 Plans on this date</h2><span class="tag" id="eventCount"></span></div><p class="muted m0">Parties, appointments, school events and anything happening just once.</p><div id="events"></div><button id="toggleEventForm" class="primary mt" style="width:100%">+ Add an event or party</button>
+<form id="eventForm" class="addForm hidden"><div class="field"><label for="eventTitle">What's happening?</label><input id="eventTitle" placeholder="e.g. Birthday party at home" required></div><div class="grid2"><div class="field"><label for="eventDate">Date</label><input id="eventDate" type="date" required></div><div class="field"><label for="eventTime">Time (optional)</label><input id="eventTime" type="time"></div></div><div class="field"><label for="eventNote">Details (optional)</label><input id="eventNote" placeholder="e.g. 3pm, 10 guests, bring cake"></div><div class="row"><button class="primary" type="submit">Save event</button><button type="button" id="cancelEvent">Cancel</button></div></form></section>
+<section class="card" id="upcomingCard"><div class="sectionHeading"><h2>Later dates</h2><span class="muted small">Next 90 days</span></div><div id="upcoming" class="upcoming"></div></section>
+<section class="card"><div class="sectionHeading"><h2 id="heading">Daily checklist</h2><span class="tag" id="progressFraction">0/0</span></div><p class="muted" id="progressText"></p><div class="bar"><div class="fill" id="fill"></div></div><p class="checknote" id="scopeHint"></p></section>
+<div id="sections"></div>
+<section class="card shopping"><div class="sectionHeading"><h2>🛒 Shopping list</h2><span class="tag" id="shoppingCount">0 to buy</span></div><p class="muted">Choose whether shopping items repeat on this weekday or belong to this particular date.</p><div class="field"><label for="shoppingScope">Shopping list to view</label><select id="shoppingScope"><option value="weekly">Weekly list for this weekday</option><option value="date">Only for this date (e.g. party supplies)</option></select></div><div id="shoppingItems"></div><form id="shoppingForm" class="inline mt"><input id="shoppingInput" placeholder="Add shopping item" aria-label="Shopping item" required><button class="primary">Add</button></form></section>
+<section class="card"><h2>Backups &amp; storage</h2><p class="muted">Saved on this phone, not shared with another phone. Your existing tasks and shopping lists are kept when you update the app at the same web address. Back up before making major changes.</p><div class="row"><button id="exportBtn">Export backup</button><label class="small" for="importInput">Import backup</label><input type="file" id="importInput" accept="application/json,.json" style="max-width:220px"></div></section></main>
+<script>
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const morning=['Check family calendar, weather and travel','Make beds, open curtains and air rooms','Unload dishwasher and tidy kitchen','Put washing on if needed','Check uniforms, school bags, lunches and sports kits','Check dinner plan and fridge','Check cat food and fresh water','Check phones, keys and essentials'];
 const evening=['Clear kitchen surfaces and reset downstairs','Load and run dishwasher as needed','Finish laundry, dry and put away','Prepare uniforms, school bags and sports kits for tomorrow','Check tomorrow\'s diary and weather','Add anything running low to supermarket basket','Charge phones and power banks as needed','Put away clutter, shoes and coats','Check doors and windows before bed'];
@@ -8,13 +27,187 @@ const jobs={Monday:['Visit cash machine while at work; aim to add £100 to emerg
 const audit=['Review emergency cash (target £750)','Review savings (emergency fund target £15,000)','Check pantry, freezer and bottled water stocks','Check medicines and first-aid supplies','Test smoke and carbon monoxide alarms','Check fire safety equipment','Check camping gas, torches, batteries and radio','Review important paperwork, insurance and household bills','Check car maintenance dates','Check cat food and litter reserves','Review garden, drains and household maintenance','Make sure the whole family knows where essential supplies are'];
 const recurring={Tuesday:{'Evening Reset':['Put bins out for collection']},Sunday:{'Evening Reset':['Make sure Leo has bus money','Check Scopay for payments and updates']}};
 const oneoffs={'2026-10-19':{'Morning Reset':['Ted to wear non-uniform','Ted to take £1 to school']}};
-const STORE='household-organiser-v2';let state={custom:{},completed:{},shopping:{},removed:{}};try{const saved=JSON.parse(localStorage.getItem(STORE));if(saved&&typeof saved==='object')state={...state,...saved}}catch(e){}
-function save(){localStorage.setItem(STORE,JSON.stringify(state))}function localDate(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
-let selected=new Date();selected.setHours(12,0,0,0);let monthly=false;const $=id=>document.getElementById(id);function dayName(){return DAYS[selected.getDay()]}function dateKey(){return localDate(selected)}function safeId(){return Math.random().toString(36).slice(2)+Date.now().toString(36)}
-function listFor(section){const day=dayName();let items=(section==='Morning Reset'?morning:section==='Evening Reset'?evening:jobs[day]).map((text,i)=>({id:'base:'+section+':'+i,text}));for(const [i,text] of (recurring[day]?.[section]||[]).entries())items.push({id:'rec:'+section+':'+i,text});for(const [i,text] of (oneoffs[dateKey()]?.[section]||[]).entries())items.push({id:'once:'+section+':'+i,text});for(const item of (state.custom[day+'|'+section]||[]))items.push(item);for(const item of (state.custom[dateKey()+'|'+section]||[]))items.push(item);return items.filter(item=>!state.removed[day+'|'+section+'|'+item.id]&&!state.removed[dateKey()+'|'+section+'|'+item.id])}
-function monthlyList(){return [...audit.map((text,i)=>({id:'audit:'+i,text})),...(state.custom['Monthly|Monthly Audit']||[])].filter(x=>!state.removed['Monthly|Monthly Audit|'+x.id])}
-function taskKey(section,id){return (monthly?dateKey().slice(0,7):dateKey())+'|'+section+'|'+id}function elt(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
-function render(){const day=dayName(),date=dateKey();$('date').textContent=selected.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});$('tabs').replaceChildren();for(const d of [...DAYS.slice(1),DAYS[0],'Monthly']){const b=elt('button',(monthly?d==='Monthly':d===day)?'active':'',d);b.onclick=()=>{if(d==='Monthly')monthly=true;else{monthly=false;const diff=(DAYS.indexOf(d)-selected.getDay()+7)%7;selected.setDate(selected.getDate()+diff)}render()};$('tabs').append(b)}$('heading').textContent=monthly?'Monthly audit':day+' checklist';$('todayBtn').onclick=()=>{selected=new Date();selected.setHours(12,0,0,0);monthly=false;render()};const sections=monthly?['Monthly Audit']:['Morning Reset',"Today's Jobs",'Evening Reset'];const container=$('sections');container.replaceChildren();let total=0,done=0;for(const section of sections){const items=monthly?monthlyList():listFor(section);total+=items.length;done+=items.filter(i=>state.completed[taskKey(section,i.id)]).length;const card=elt('section','card');const head=elt('div','sectionHead');head.append(elt('h2','',section),elt('span','badge',items.filter(i=>state.completed[taskKey(section,i.id)]).length+'/'+items.length));card.append(head);for(const item of items){const row=elt('div','task');const cb=elt('input');cb.type='checkbox';cb.checked=!!state.completed[taskKey(section,item.id)];const label=elt('label',cb.checked?'done':'',item.text);cb.onchange=()=>{state.completed[taskKey(section,item.id)]=cb.checked;save();render()};row.append(cb,label);const del=elt('button','delete','×');del.title='Remove task';del.setAttribute('aria-label','Remove '+item.text);del.onclick=()=>{if(!confirm('Remove this task from the checklist?'))return;const key=(monthly?'Monthly|Monthly Audit':day+'|'+section)+'|'+item.id;state.removed[key]=true;save();render()};row.append(del);card.append(row)}const form=elt('form','add');const input=elt('input');input.placeholder='Add a task to '+section;input.required=true;input.setAttribute('aria-label','Add task to '+section);const btn=elt('button','primary','Add');form.append(input,btn);form.onsubmit=e=>{e.preventDefault();const text=input.value.trim();if(!text)return;const key=monthly?'Monthly|Monthly Audit':day+'|'+section;(state.custom[key]??=[]).push({id:'custom:'+safeId(),text});save();render()};card.append(form);if(!monthly)card.append(elt('p','muted small','Added tasks repeat every '+day+'.'));container.append(card)}$('progressText').textContent=`${done} of ${total} tasks complete`; $('fill').style.width=(total?done/total*100:0)+'%';renderShopping()}
-function renderShopping(){const key=monthly?'Monthly':dayName();const list=state.shopping[key]||[];$('shoppingCount').textContent=list.filter(x=>!x.done).length+' to buy';const area=$('shoppingItems');area.replaceChildren();for(const item of list){const row=elt('div','task');const cb=elt('input');cb.type='checkbox';cb.checked=!!item.done;cb.onchange=()=>{item.done=cb.checked;save();renderShopping()};const label=elt('label',item.done?'done':'',item.text);const del=elt('button','delete','×');del.setAttribute('aria-label','Delete '+item.text);del.onclick=()=>{state.shopping[key]=list.filter(x=>x.id!==item.id);save();renderShopping()};row.append(cb,label,del);area.append(row)}$('shoppingForm').onsubmit=e=>{e.preventDefault();const text=$('shoppingInput').value.trim();if(!text)return;(state.shopping[key]??=[]).push({id:safeId(),text,done:false});$('shoppingInput').value='';save();renderShopping()}}
-$('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='household-organiser-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};$('importInput').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{const obj=JSON.parse(await file.text());if(!obj||typeof obj!=='object'||!obj.custom||!obj.completed||!obj.shopping)throw Error('Invalid backup');if(confirm('Replace saved tasks and shopping lists with this backup?')){state={custom:obj.custom,completed:obj.completed,shopping:obj.shopping,removed:obj.removed||{}};save();render()}}catch(err){alert('Could not import backup: '+err.message)}e.target.value=''};render();
-</script><script>if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});</script></body></html>
+
+const STORE='household-organiser-v2';
+let state={custom:{},completed:{},shopping:{},removed:{},events:[],starred:{}};
+try{const saved=JSON.parse(localStorage.getItem(STORE));if(saved&&typeof saved==='object')state={...state,...saved};}catch(e){}
+if(!Array.isArray(state.events))state.events=[];
+for(const key of ['custom','completed','shopping','removed','starred'])if(!state[key]||typeof state[key]!=='object')state[key]={};
+const $=id=>document.getElementById(id);
+function save(){try{localStorage.setItem(STORE,JSON.stringify(state))}catch(e){alert('Changes could not be saved. Your phone may be out of storage. Please export a backup.')}}
+function pad(n){return String(n).padStart(2,'0')}
+function iso(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+function parseISO(v){if(!/^\d{4}-\d\d-\d\d$/.test(v))return null;const [y,m,d]=v.split('-').map(Number),obj=new Date(y,m-1,d,12,0,0,0);return iso(obj)===v?obj:null}
+function safeId(){return (globalThis.crypto?.randomUUID?.()||Math.random().toString(36).slice(2)+Date.now().toString(36))}
+function node(tag,cls,text){const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el}
+let selected=new Date();selected.setHours(12,0,0,0);let monthly=false;
+let shoppingView='weekly';
+const expanded={'Morning Reset':false,'Evening Reset':false};
+function dayName(){return DAYS[selected.getDay()]}
+function dateKey(){return iso(selected)}
+function isToday(d){return iso(d)===iso(new Date())}
+function formatLong(d){return d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
+function dayShort(d){return d.toLocaleDateString('en-GB',{weekday:'short'})}
+function shiftDays(n){selected.setDate(selected.getDate()+n);render()}
+function goToDate(v){const d=parseISO(v);if(!d)return;selected=d;monthly=false;render()}
+function listFor(section){
+ const day=dayName(),date=dateKey();
+ const base=(section==='Morning Reset'?morning:section==='Evening Reset'?evening:jobs[day]).map((text,i)=>({id:'base:'+section+':'+i,text,origin:'weekly'}));
+ const items=[...base];
+ for(const [i,text] of (recurring[day]?.[section]||[]).entries())items.push({id:'rec:'+section+':'+i,text,origin:'weekly'});
+ for(const [i,text] of (oneoffs[date]?.[section]||[]).entries())items.push({id:'once:'+section+':'+i,text,origin:'date'});
+ for(const item of (state.custom[day+'|'+section]||[]))items.push({...item,origin:'weekly'});
+ for(const item of (state.custom[date+'|'+section]||[]))items.push({...item,origin:'date'});
+ return items.filter(item=>!state.removed[(item.origin==='date'?date:day)+'|'+section+'|'+item.id]);
+}
+function monthlyList(){return [...audit.map((text,i)=>({id:'audit:'+i,text,origin:'monthly'})),...(state.custom['Monthly|Monthly Audit']||[]).map(item=>({...item,origin:'monthly'}))].filter(x=>!state.removed['Monthly|Monthly Audit|'+x.id])}
+function taskKey(section,id){return (monthly?dateKey().slice(0,7):dateKey())+'|'+section+'|'+id}
+function renderNav(){
+ $('dateLabel').textContent=formatLong(selected);
+ $('dateContext').textContent=isToday(selected)?'Today — your current day':'Showing a specific date';
+ $('datePicker').value=dateKey();
+ $('todayBtn').disabled=isToday(selected)&&!monthly;
+ $('dailyTab').classList.toggle('active',!monthly);$('monthlyTab').classList.toggle('active',monthly);
+ const strip=$('weekStrip');strip.replaceChildren();const weekStart=new Date(selected);weekStart.setDate(weekStart.getDate()-((weekStart.getDay()+6)%7));
+ for(let i=0;i<7;i++){const day=new Date(weekStart);day.setDate(day.getDate()+i);const b=node('button',iso(day)===dateKey()?'active':isToday(day)?'todayMark':'');const w=node('span','',dayShort(day));const n=node('b','',day.getDate());b.append(w,n);b.type='button';b.title=formatLong(day);b.setAttribute('aria-label','View '+formatLong(day));b.setAttribute('aria-pressed',String(iso(day)===dateKey()));b.onclick=()=>goToDate(iso(day));strip.append(b)}
+ $('dailyEventCard').classList.toggle('hidden',monthly);$('upcomingCard').classList.toggle('hidden',monthly);$('priorityCard').classList.toggle('hidden',monthly);$('dailyFocusCard').classList.toggle('hidden',monthly);
+ $('scopeHint').textContent=monthly?'Ticked items are tracked separately for each month.':'Only this date is ticked off. Your weekly tasks reappear on the same weekday next week.';
+}
+function weekStart(){return new Date(selected)}
+function priorityEntryForDate(date,section,item){return {date,section,item,done:!!state.completed[date+'|'+section+'|'+item.id]}}
+function priorityEntries(){
+ const start=weekStart(), entries=[];
+ for(let i=0;i<7;i++){
+  const dateObj=new Date(start);dateObj.setDate(start.getDate()+i);
+  const day=iso(dateObj),weekday=DAYS[dateObj.getDay()];
+  for(const section of ['Morning Reset',"Today's Jobs",'Evening Reset']){
+   const special=(oneoffs[day]?.[section]||[]).map((text,j)=>({id:'once:'+section+':'+j,text,origin:'date'}));
+   const custom=(state.custom[day+'|'+section]||[]).map(item=>({...item,origin:'date'}));
+   const routine=(section==='Morning Reset'?morning:section==='Evening Reset'?evening:jobs[weekday]).map((text,j)=>({id:'base:'+section+':'+j,text,origin:'weekly'}));
+   for(const [j,text] of (recurring[weekday]?.[section]||[]).entries())routine.push({id:'rec:'+section+':'+j,text,origin:'weekly'});
+   for(const item of (state.custom[weekday+'|'+section]||[]))routine.push({...item,origin:'weekly'});
+   for(const item of [...special,...custom,...routine.filter(item=>state.starred[weekday+'|'+section+'|'+item.id])]){
+    const removalKey=(item.origin==='date'?day:weekday)+'|'+section+'|'+item.id;
+    if(!state.removed[removalKey])entries.push(priorityEntryForDate(day,section,item));
+   }
+  }
+ }
+ return entries.sort((a,b)=>a.date.localeCompare(b.date));
+}
+function createTaskRow(item,section,when,isMonthly=false,featured=false){
+ const row=node('div','task');const cb=node('input');cb.type='checkbox';
+ const key=(isMonthly?when.slice(0,7):when)+'|'+section+'|'+item.id;
+ cb.checked=!!state.completed[key];
+ cb.id='task-'+key.replace(/[^a-zA-Z0-9]/g,'_')+'-'+(featured?'focus':'main');
+ const label=node('label',cb.checked?'done':'',item.text);label.htmlFor=cb.id;
+ cb.onchange=()=>{state.completed[key]=cb.checked;save();render()};row.append(cb,label);
+ const actions=node('div','taskActions');
+ if(!isMonthly&&item.origin==='weekly'){
+  const star=node('button','quietIcon '+(state.starred[DAYS[parseISO(when).getDay()]+'|'+section+'|'+item.id]?'isStarred':''),state.starred[DAYS[parseISO(when).getDay()]+'|'+section+'|'+item.id]?'★':'☆');
+  star.title='Mark as a weekly priority';star.setAttribute('aria-label','Toggle weekly priority for '+item.text);
+  star.onclick=()=>{const p=DAYS[parseISO(when).getDay()]+'|'+section+'|'+item.id;state.starred[p]=!state.starred[p];save();render()};actions.append(star)
+ }
+ if(item.id.startsWith('custom:')){
+  const edit=node('button','quietIcon','✎');edit.title='Edit task';edit.setAttribute('aria-label','Edit '+item.text);
+  edit.onclick=()=>{const updated=prompt('Edit task',item.text);if(updated===null||!updated.trim())return;
+   const anchor=item.origin==='date'?when:item.origin==='monthly'?'Monthly':DAYS[parseISO(when).getDay()];
+   const arr=state.custom[anchor+'|'+section]||[];const found=arr.find(t=>t.id===item.id);
+   if(found){found.text=updated.trim();save();render()}};actions.append(edit)
+ }
+ const del=node('button','quietIcon','×');del.title='Remove task';del.setAttribute('aria-label','Remove '+item.text);
+ del.onclick=()=>{
+  const anchor=item.origin==='monthly'?'Monthly':item.origin==='date'?when:DAYS[parseISO(when).getDay()];
+  const phrase=item.origin==='monthly'?'monthly audit':item.origin==='date'?when:'every '+anchor;
+  if(!confirm('Remove this task from '+phrase+'?'))return;
+  state.removed[anchor+'|'+section+'|'+item.id]=true;save();render()
+ };actions.append(del);row.append(actions);return row;
+}
+function renderWeekFocus(){
+ const focus=$('weekItems');focus.replaceChildren();const entries=priorityEntries();
+ const start=weekStart();const end=new Date(start);end.setDate(start.getDate()+6);
+ $('weekRange').textContent=start.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' – '+end.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+ const events=state.events.filter(x=>x.date>=iso(start)&&x.date<=iso(end)).map(x=>({date:x.date,event:x}));
+ const all=[...entries.map(e=>({...e,kind:'task'})),...events.map(e=>({...e,kind:'event'}))].sort((a,b)=>a.date.localeCompare(b.date)||((a.kind==='event'?-1:1)));
+ $('weekCount').textContent=all.filter(x=>x.kind==='event'||!x.done).length+' ahead';
+ if(all.length===0){focus.append(node('p','empty','No extra plans yet. Add an important job or party here; your regular tasks are below.'));return}
+ for(const e of all){
+  const row=node('div','weeklyItem');const dateBtn=node('button','weekDate',new Date(e.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}));
+  dateBtn.title='Show '+e.date;dateBtn.onclick=()=>goToDate(e.date);row.append(dateBtn);
+  if(e.kind==='event'){const txt=node('div','weekText');txt.append(node('b','',e.event.title));if(e.event.time)txt.append(node('span','muted small',' · '+e.event.time));row.append(txt);row.append(node('span','tag','Event'))}
+  else{const cb=node('input');cb.type='checkbox';cb.checked=e.done;cb.setAttribute('aria-label','Complete '+e.item.text+' on '+e.date);cb.onchange=()=>{state.completed[e.date+'|'+e.section+'|'+e.item.id]=cb.checked;save();render()};row.append(cb);
+    const txt=node('div','weekText');const taskLabel=node('label',e.done?'done':'',e.item.text);taskLabel.onclick=()=>{cb.checked=!cb.checked;cb.onchange()};txt.append(taskLabel);txt.append(node('div','muted small',e.section));row.append(txt)
+  }
+  focus.append(row)
+ }
+}
+function renderFocusTasks(){
+ const box=$('dailyFocus');box.replaceChildren();const here=[];
+ for(const section of ['Morning Reset',"Today's Jobs",'Evening Reset']){
+  const all=listFor(section);
+  for(const it of all){if(section==="Today's Jobs"||it.origin==='date'||state.starred[dayName()+'|'+section+'|'+it.id])here.push({section,item:it})}
+ }
+ const count=here.filter(x=>state.completed[taskKey(x.section,x.item.id)]).length;
+ $('focusCount').textContent=count+'/'+here.length;
+ if(here.length===0){box.append(node('p','empty','No priority jobs today.'));return}
+ for(const {section,item} of here){
+  const row=createTaskRow(item,section,dateKey(),false,true);
+  if(section!=="Today's Jobs")row.append(node('span','sectionPill',section==='Morning Reset'?'Morning':'Evening'));
+  box.append(row)
+ }
+}
+function renderSections(){
+ const container=$('sections');
+ for(const section of ['Morning Reset','Evening Reset']){const el=document.getElementById(section==='Morning Reset'?'morningDetails':'eveningDetails');if(el)expanded[section]=el.open}
+ container.replaceChildren();let total=0,done=0;
+ const sections=monthly?['Monthly Audit']:['Morning Reset',"Today's Jobs",'Evening Reset'];
+ for(const section of sections){const items=monthly?monthlyList():listFor(section);total+=items.length;done+=items.filter(t=>state.completed[taskKey(section,t.id)]).length;
+  if(!monthly&&section==="Today's Jobs")continue; // high-priority jobs are above the reset sections
+  const card=node('section','card');const wrap=!monthly?node('details','routineDetails'):null;
+  if(wrap){wrap.id=section==='Morning Reset'?'morningDetails':'eveningDetails';wrap.open=!!expanded[section]}
+  const heading=wrap?node('summary','routineSummary'):node('div','sectionHeading');heading.append(node('h2','',section),node('span','tag',items.filter(t=>state.completed[taskKey(section,t.id)]).length+'/'+items.length));
+  if(wrap){card.classList.add('routineCard');card.append(wrap);wrap.append(heading);wrap.append(node('p','checknote','Tap to expand or hide your full routine.'))}
+  else card.append(heading);
+  const into=wrap||card;
+  for(const item of items)into.append(createTaskRow(item,section,dateKey(),monthly));
+  const form=node('form','addForm');const promptText=node('label','',`+ Add to ${section}`);const taskInput=node('input');taskInput.placeholder='Add another task';taskInput.required=true;taskInput.maxLength=250;promptText.append(taskInput);form.append(promptText);
+  const scopeField=node('div','field mt');scopeField.append(node('label','','When should this task appear?'));const scopeSelect=node('select');
+  if(monthly)scopeSelect.append(new Option('Every month','monthly'));
+  else scopeSelect.append(new Option('Just '+selected.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'}),'date'),new Option('Every '+dayName()+' (repeat weekly)','weekly'));
+  scopeField.append(scopeSelect);form.append(scopeField);const add=node('button','primary','+ Add task');add.type='submit';form.append(add);
+  form.onsubmit=e=>{e.preventDefault();const val=taskInput.value.trim();if(!val)return;const key=monthly?'Monthly|Monthly Audit':(scopeSelect.value==='weekly'?dayName():dateKey())+'|'+section;
+   (state.custom[key]??=[]).push({id:'custom:'+safeId(),text:val});save();render()};into.append(form);container.append(card)
+ }
+ $('heading').textContent=monthly?'Monthly preparedness audit':dayName()+' checklist';$('progressText').textContent=`${done} of ${total} tasks complete`;
+ $('progressFraction').textContent=done+'/'+total;$('fill').style.width=(total?done/total*100:0)+'%';
+ if(!monthly){renderFocusTasks();renderWeekFocus()}
+}
+function setupPriority(){
+ $('priorityDate').value=dateKey();
+ $('priorityForm').onsubmit=e=>{
+  e.preventDefault();const val=$('priorityText').value.trim(),date=$('priorityDate').value,section=$('prioritySection').value;
+  if(!val||!parseISO(date))return;
+  (state.custom[date+'|'+section]??=[]).push({id:'custom:'+safeId(),text:val,priority:true});
+  save();$('priorityText').value='';$('priorityForm').classList.add('hidden');$('togglePriorityForm').classList.remove('hidden');goToDate(date)
+ };
+ $('togglePriorityForm').onclick=()=>{$('priorityDate').value=dateKey();$('priorityForm').classList.remove('hidden');$('togglePriorityForm').classList.add('hidden');$('priorityText').focus()};
+ $('cancelPriority').onclick=()=>{$('priorityForm').classList.add('hidden');$('togglePriorityForm').classList.remove('hidden')};
+ $('focusAddTask').onclick=()=>{$('priorityDate').value=dateKey();$('priorityForm').classList.remove('hidden');$('togglePriorityForm').classList.add('hidden');$('priorityText').focus();$('priorityForm').scrollIntoView({block:'center',behavior:'smooth'})};
+ $('priorityEventBtn').onclick=()=>{showEventForm(true);$('eventForm').scrollIntoView({block:'center',behavior:'smooth'})};
+}
+function showEventForm(show){$('eventForm').classList.toggle('hidden',!show);$('toggleEventForm').classList.toggle('hidden',show);if(show){$('eventDate').value=dateKey();$('eventTitle').focus()}}
+function renderEvents(){const here=state.events.filter(e=>e.date===dateKey()).sort((a,b)=>(a.time||'').localeCompare(b.time||''));$('eventCount').textContent=here.length+' event'+(here.length===1?'':'s');const target=$('events');target.replaceChildren();if(here.length===0)target.append(node('p','empty','No special events on this date yet.'));
+ for(const event of here){const row=node('div','event');const detail=node('div');detail.append(node('div','eventTitle',(event.time?event.time+' · ':'')+event.title));if(event.note)detail.append(node('p','muted m0',event.note));row.append(detail);const btn=node('button','quietIcon','×');btn.title='Remove event';btn.setAttribute('aria-label','Remove event '+event.title);btn.onclick=()=>{if(!confirm('Remove '+event.title+' on '+event.date+'?'))return;state.events=state.events.filter(x=>x.id!==event.id);save();renderEvents();renderUpcoming()};row.append(btn);target.append(row)}
+}
+function renderUpcoming(){const today=iso(new Date()),end=new Date();end.setDate(end.getDate()+90);const upcoming=state.events.filter(e=>e.date>=today&&e.date<=iso(end)).sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''));const target=$('upcoming');target.replaceChildren();if(!upcoming.length){target.append(node('p','empty','Nothing scheduled yet. Add a party or appointment above.'));return;}for(const ev of upcoming.slice(0,6)){const btn=node('button','');const main=node('div');main.append(node('b','',ev.title));const when=parseISO(ev.date);btn.append(main,node('span','',when.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+(ev.time?' · '+ev.time:'')));btn.onclick=()=>goToDate(ev.date);target.append(btn)}}
+function shoppingKey(){return shoppingView==='date'?dateKey():dayName()}
+function renderShopping(){const list=state.shopping[shoppingKey()]||[];$('shoppingCount').textContent=list.filter(i=>!i.done).length+' to buy';$('shoppingScope').value=shoppingView;const target=$('shoppingItems');target.replaceChildren();if(!list.length)target.append(node('div','empty',shoppingView==='date'?'No shopping items for this date.':'No shopping items on this weekday list.'));for(const item of list){const row=node('div','task');const cb=node('input');cb.type='checkbox';cb.checked=!!item.done;const label=node('label',item.done?'done':'',item.text);cb.onchange=()=>{item.done=cb.checked;save();renderShopping()};const del=node('button','quietIcon','×');del.title='Remove shopping item';del.setAttribute('aria-label','Remove '+item.text);del.onclick=()=>{state.shopping[shoppingKey()]=list.filter(i=>i.id!==item.id);save();renderShopping()};row.append(cb,label,del);target.append(row)}}
+function render(){renderNav();renderSections();if(!monthly){renderEvents();renderUpcoming()}renderShopping()}
+$('prevDay').onclick=()=>shiftDays(-1);$('nextDay').onclick=()=>shiftDays(1);$('datePicker').onchange=e=>goToDate(e.target.value);$('todayBtn').onclick=()=>{selected=new Date();selected.setHours(12,0,0,0);monthly=false;render()};$('dailyTab').onclick=()=>{monthly=false;render()};$('monthlyTab').onclick=()=>{monthly=true;render()};
+$('toggleEventForm').onclick=()=>showEventForm(true);$('cancelEvent').onclick=()=>showEventForm(false);
+$('eventForm').onsubmit=e=>{e.preventDefault();const title=$('eventTitle').value.trim(),date=$('eventDate').value,time=$('eventTime').value,note=$('eventNote').value.trim();if(!title||!parseISO(date))return;state.events.push({id:safeId(),date,time,title,note});save();$('eventForm').reset();showEventForm(false);goToDate(date)};
+$('shoppingScope').onchange=e=>{shoppingView=e.target.value;renderShopping()};$('shoppingForm').onsubmit=e=>{e.preventDefault();const text=$('shoppingInput').value.trim();if(!text)return;(state.shopping[shoppingKey()]??=[]).push({id:safeId(),text,done:false});$('shoppingInput').value='';save();renderShopping()};
+$('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='household-organiser-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)};
+$('importInput').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{const obj=JSON.parse(await file.text());if(!obj||typeof obj!=='object'||!obj.custom||!obj.completed||!obj.shopping)throw Error('Invalid backup');if(confirm('Replace the data on this phone with the backup?')){state={custom:obj.custom,completed:obj.completed,shopping:obj.shopping,removed:obj.removed||{},events:Array.isArray(obj.events)?obj.events:[],starred:obj.starred||{}};save();render()}}catch(err){alert('Could not import backup: '+err.message)}e.target.value=''};
+setupPriority();render();
+
+</script><script>if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});</script></body></html>
