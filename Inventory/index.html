@@ -14,17 +14,16 @@
 <body>
   <main class="app">
     <header class="header">
-      <div><div class="eyebrow">HOUSEHOLD READINESS</div><h1>Home Reserves</h1><p class="subtitle">Your stock, your targets, your family meal plan.</p></div>
-      <button id="quickAdd" class="primary" type="button">+ Item</button>
+      <div><div class="eyebrow">✦ YOUR HOME, PREPARED</div><h1>Home Reserves</h1><p class="subtitle">A calmer way to keep everything in stock.</p></div>
+      <button id="quickAdd" class="primary" type="button">＋ Add</button>
     </header>
     <nav class="nav" aria-label="Main navigation">
-      <button type="button" data-tab="overview">Overview</button>
-      <button type="button" data-tab="inventory">Inventory</button>
-      <button type="button" data-tab="meals">Meals</button>
-      <button type="button" data-tab="settings">Settings</button>
+      <button type="button" data-tab="overview">⌂ Home</button>
+      <button type="button" data-tab="inventory">▦ Stock</button>
+      <button type="button" data-tab="meals">♨ Meals</button>
+      <button type="button" data-tab="settings">⚙ More</button>
     </nav>
-    <p class="small"><a href="./pantry-view.html">🗄️ View pantry shelves →</a></p>
-    <p class="small"><a href="./three-week-review.html">📋 Review three-week preparedness targets →</a></p>
+    <div class="feature-links"><a class="feature-link" href="./pantry-view.html"><span class="feature-icon">▤</span><span><strong>My pantry</strong><small>Explore your shelves</small></span><span aria-hidden="true">→</span></a><a class="feature-link" href="./three-week-review.html"><span class="feature-icon">◎</span><span><strong>21-day plan</strong><small>Review suggested targets</small></span><span aria-hidden="true">→</span></a></div>
     <div id="message" aria-live="polite"></div>
     <div id="screen"></div>
     <p class="footer-note">Data is saved on this device only. Export a backup regularly, especially before changing your phone.</p>
