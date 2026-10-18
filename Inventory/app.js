@@ -11,6 +11,7 @@ const INITIAL_CATEGORIES = [
   {id:'car',name:'Car & travel',type:'other'}
 ];
 // Names only: no quantities are presumed to be accurate.
+const UNITS = ['unit','item','each','tin','can','jar','bottle','carton','pack','packet','box','bag','pouch','sachet','bar','roll','kit','pair','litre','ml','kg','g','500g pack','1kg pack','2L bottle','5L bottle','£'];
 const STARTER_ITEMS = [
   ['food','Pasta','pack'],['food','Dry rice','pack'],['food','Microwave rice','pouch'],
   ['food','Pasta sauce','jar'],['food','Passata','carton'],['food','Chopped tomatoes','tin'],
@@ -28,7 +29,7 @@ const STARTER_ITEMS = [
   ['firstaid','Eyewash','bottle'],['hygiene','Antibacterial hand gel','bottle'],
   ['hygiene','Wipes','pack'],['safety','Fire blanket','unit'],
   ['safety','Water-mist extinguisher','unit'],['safety','Warm blankets','unit'],
-  ['car','Car emergency bag','bag']
+  ['car','Car emergency bag','bag'],['safety','Emergency cash','£']
 ];
 const $ = id => document.getElementById(id);
 const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -122,7 +123,7 @@ function editItem(id){
     dropdown('category','Category',state.categories.map(c=>[c.id,c.name]),i?.category||state.categories[0].id)+
     '<div class="split">'+field('current','Current level',i?.current??'','type="number" min="0" step="any" placeholder="Not counted"')+
     field('optimum','Optimum level',i?.optimum??'','type="number" min="0" step="any" placeholder="Your target"')+'</div>'+
-    '<div class="split">'+field('unit','Stock counted in',i?.unit||'packs','required maxlength="32" placeholder="tins / bottles"')+
+    '<div class="split">'+'<div class="field"><label for="f_unit">Stock counted in</label><input id="f_unit" name="unit" list="stockUnits" value="'+escapeHTML(i?.unit||'pack')+'" required maxlength="32" placeholder="Choose or type a unit"><datalist id="stockUnits">'+UNITS.map(u=>'<option value="'+escapeHTML(u)+'"></option>').join('')+'</datalist></div>'+
     field('location','Storage location',i?.location||'','maxlength="90" placeholder="Utility cupboard"')+'</div>'+
     '<div class="split">'+field('expiry','Earliest expiry date',i?.expiry||'','type="date"')+
     field('litresPerUnit','Litres per item (for water)',i?.litresPerUnit??'','type="number" min="0" step="any" placeholder="e.g. 5"')+'</div>'+
@@ -149,6 +150,7 @@ function editRecipe(id){
     (r?.ingredients?.length?r.ingredients.map(ing=>ingredientRow(ing.itemId,ing.amount)).join(''):ingredientRow())+'</div>'+
     '<button type="button" class="light-button" data-action="addIngredient">+ Ingredient</button>'+formActions('Recipe',r?.id)+'</form>');
 }
+function unitLabel(i){return i.unit==='£'?'£'+fmt(amount(i)):fmt(amount(i))+' '+escapeHTML(i.unit||'');}
 function stat(value,label){return '<div class="stat"><div class="value">'+value+'</div><div class="label">'+label+'</div></div>';}
 function stats(){
   const counted=state.items.filter(listed).length,below=state.items.filter(low).length,exp=state.items.filter(expiresSoon).length;
@@ -157,7 +159,7 @@ function stats(){
 function overview(){
   const m=calculateMeals(),people=setting('people',4),meals=setting('mealsPerDay',1),days=m.portions/(people*meals),water=waterLitres(),waterDays=water/(people*setting('waterPerPerson',3));
   const below=state.items.filter(low).sort((a,b)=>a.name.localeCompare(b.name));
-  return '<section class="card hero"><div class="eyebrow">YOUR HOME AT A GLANCE</div><h2>Everything in one place</h2><p class="small muted">Track what you have, set your own comfortable levels and see what needs using or checking. No automatic shopping targets.</p></section>'+stats()+
+  return '<section class="card hero"><div class="eyebrow">YOUR HOUSEHOLD DASHBOARD</div><h2>A little more prepared, every day.</h2><p class="small muted">Your supplies at a glance. Keep the essentials topped up, without overbuying.</p><div class="hero-actions"><button class="primary" data-tab="inventory">Browse stock →</button><a href="./pantry-view.html">Explore pantry →</a></div></section>'+stats()+
   '<section class="card"><div class="section-title"><h2>What might your supplies cover?</h2><button class="text-button" data-tab="meals">Meal details →</button></div>'+ 
   '<div class="split"><div><div class="large-number">'+(state.recipes.length?fmt(days):'—')+'</div><div class="small muted">Days of planned meals</div><div class="small"><strong>'+(state.recipes.length?fmt(days/7)+' weeks':'Add recipes to estimate')+'</strong></div></div>'+ 
   '<div><div class="large-number">'+(water>0?fmt(waterDays):'—')+'</div><div class="small muted">Water days</div><div class="small"><strong>'+fmt(water)+' litres logged</strong></div></div></div>'+ 
@@ -184,7 +186,7 @@ function inventory(){
   const filtered=state.items.filter(i=>(categoryFilter==='all'||i.category===categoryFilter)&&
     (statusFilter==='all'||(statusFilter==='low'&&low(i))||(statusFilter==='uncounted'&&!listed(i))||(statusFilter==='notarget'&&!targeted(i))||(statusFilter==='expiry'&&expiresSoon(i)))&&
     (i.name+' '+(i.location||'')+' '+(i.notes||'')).toLowerCase().includes(query.toLowerCase())).sort((a,b)=>Number(low(b))-Number(low(a))||a.name.localeCompare(b.name));
-  return '<section class="card"><div class="section-title"><h2>Inventory</h2><div class="actions"><button data-action="newCategory">+ Category</button><button class="primary" data-action="newItem">+ Item</button></div></div>'+ 
+  return '<section class="card"><div class="eyebrow">YOUR COLLECTION</div><div class="section-title"><h2>All your supplies</h2><div class="actions"><button data-action="newCategory">+ Category</button><button class="primary" data-action="newItem">+ Item</button></div></div>'+ 
     '<div class="filter-grid"><input id="filterSearch" class="search" aria-label="Search stock" placeholder="Search items or locations" value="'+escapeHTML(query)+'">'+
     '<select id="filterCategory" aria-label="Select category"><option value="all">All categories</option>'+state.categories.map(c=>'<option value="'+escapeHTML(c.id)+'" '+(categoryFilter===c.id?'selected':'')+'>'+escapeHTML(c.name)+'</option>').join('')+'</select>'+ 
     '<select id="filterStatus" aria-label="Select status">'+[['all','All levels'],['low','Below optimum'],['uncounted','Not counted'],['notarget','No optimum set'],['expiry','Expiring soon']].map(([v,l])=>'<option value="'+v+'" '+(statusFilter===v?'selected':'')+'>'+l+'</option>').join('')+'</select></div>'+ 
