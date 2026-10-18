@@ -1,0 +1,163 @@
+{
+  "title": "Three-week household preparedness targets",
+  "household": 4,
+  "days": 21,
+  "notes": "Planning targets only. Do not overwrite existing optimum levels without user review. Water 252 L is theoretical, not an automatic purchase target.",
+  "targets": [
+    {
+      "name": "Pasta",
+      "target": 8,
+      "unit": "500g packs"
+    },
+    {
+      "name": "Dry rice",
+      "target": 5,
+      "unit": "1kg packs"
+    },
+    {
+      "name": "Microwave rice",
+      "target": 20,
+      "unit": "pouches"
+    },
+    {
+      "name": "Pasta sauce",
+      "target": 14,
+      "unit": "jars"
+    },
+    {
+      "name": "Passata and chopped tomatoes",
+      "target": 24,
+      "unit": "combined tins/cartons"
+    },
+    {
+      "name": "Beans and pulses",
+      "target": 42,
+      "unit": "combined tins/jars"
+    },
+    {
+      "name": "Lentils",
+      "target": 3,
+      "unit": "500g packs"
+    },
+    {
+      "name": "Soup",
+      "target": 18,
+      "unit": "tins"
+    },
+    {
+      "name": "Ready-to-eat meals",
+      "target": 16,
+      "unit": "pouches/tins"
+    },
+    {
+      "name": "Oat milk",
+      "target": 30,
+      "unit": "litres"
+    },
+    {
+      "name": "Breakfast cereal",
+      "target": 6,
+      "unit": "boxes"
+    },
+    {
+      "name": "Oats",
+      "target": 2,
+      "unit": "kg"
+    },
+    {
+      "name": "Cereal bars",
+      "target": 60,
+      "unit": "bars"
+    },
+    {
+      "name": "Peanut butter",
+      "target": 3,
+      "unit": "jars"
+    },
+    {
+      "name": "Crackers and breadsticks",
+      "target": 8,
+      "unit": "packs"
+    },
+    {
+      "name": "Tinned fruit",
+      "target": 12,
+      "unit": "tins"
+    },
+    {
+      "name": "Tinned vegetables",
+      "target": 18,
+      "unit": "tins"
+    },
+    {
+      "name": "Nuts and dried fruit",
+      "target": 2,
+      "unit": "kg"
+    },
+    {
+      "name": "Cooking oil",
+      "target": 3,
+      "unit": "litres"
+    },
+    {
+      "name": "Drinking water first 3 days",
+      "target": 36,
+      "unit": "litres"
+    },
+    {
+      "name": "Drinking water theoretical 21 days",
+      "target": 252,
+      "unit": "litres"
+    },
+    {
+      "name": "Toilet rolls",
+      "target": 30,
+      "unit": "rolls"
+    },
+    {
+      "name": "Wet wipes",
+      "target": 10,
+      "unit": "packs"
+    },
+    {
+      "name": "Hand sanitiser",
+      "target": 1,
+      "unit": "litre"
+    },
+    {
+      "name": "Torches and head torches",
+      "target": 4,
+      "unit": "working units"
+    },
+    {
+      "name": "Lanterns",
+      "target": 3,
+      "unit": "working units"
+    },
+    {
+      "name": "Power banks",
+      "target": 2,
+      "unit": "charged units"
+    },
+    {
+      "name": "Radio",
+      "target": 1,
+      "unit": "working unit"
+    },
+    {
+      "name": "Manual tin openers",
+      "target": 2,
+      "unit": "units"
+    },
+    {
+      "name": "First aid kits",
+      "target": 2,
+      "unit": "complete kits"
+    },
+    {
+      "name": "Emergency cash",
+      "target": 750,
+      "unit": "GBP"
+    }
+  ]
+}
