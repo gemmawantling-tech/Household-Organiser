@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function verified() { return request.auth != null && request.auth.token.email_verified == true; }
+    function member(hid) { return verified() && exists(/databases/$(database)/documents/households/$(hid)/members/$(request.auth.uid)); }
+    match /profiles/{uid} {
+      allow get: if verified() && request.auth.uid == uid;
+      allow create: if verified() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['householdId','email'])
+        && request.resource.data.email == request.auth.token.email
+        && existsAfter(/databases/$(database)/documents/households/$(request.resource.data.householdId)/members/$(uid));
+      // Household reassignment requires a separate, explicitly designed transfer flow.
+      allow update, delete, list: if false;
+    }
+    match /households/{hid} {
+      allow get: if member(hid);
+      allow list: if false;
+      allow create: if verified()
+        && request.resource.data.keys().hasOnly(['name','ownerUid','inviteCode','createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.inviteCode is string
+        && request.resource.data.inviteCode.size() >= 32
+        && request.resource.data.createdAt == request.time
+        && !exists(/databases/$(database)/documents/profiles/$(request.auth.uid))
+        && getAfter(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.householdId == hid;
+      // Owner can revoke old links by rotating the code without changing other data.
+      allow update: if member(hid) && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['inviteCode'])
+        && request.resource.data.inviteCode is string && request.resource.data.inviteCode.size() >= 32;
+      allow delete: if false;
+      match /members/{uid} {
+        // A joining user can check their own membership without seeing the household.
+        allow get: if verified() && (request.auth.uid == uid || member(hid));
+        allow list: if member(hid);
+        allow create: if verified() && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['uid','email','role','inviteCode','joinedAt'])
+          && request.resource.data.uid == uid
+          && request.resource.data.email == request.auth.token.email
+          && request.resource.data.joinedAt == request.time
+          && (!exists(/databases/$(database)/documents/profiles/$(uid))
+            || get(/databases/$(database)/documents/profiles/$(uid)).data.householdId == hid)
+          && getAfter(/databases/$(database)/documents/profiles/$(uid)).data.householdId == hid
+          && ((request.resource.data.role == 'owner'
+              && !exists(/databases/$(database)/documents/households/$(hid))
+              && getAfter(/databases/$(database)/documents/households/$(hid)).data.ownerUid == uid)
+            || (request.resource.data.role == 'member'
+              && request.resource.data.inviteCode == get(/databases/$(database)/documents/households/$(hid)).data.inviteCode));
+        allow update, delete: if false;
+      }
+      match /{collection}/{item} {
+        allow read, write: if collection in ['tasks','reminders','events'] && member(hid);
+      }
+    }
+  }
+}
