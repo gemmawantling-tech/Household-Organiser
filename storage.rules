@@ -1,0 +1,21 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function member(hid) {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && firestore.exists(/databases/(default)/documents/households/$(hid)/members/$(request.auth.uid));
+    }
+    match /households/{hid}/events/{eventId}/{objectId} {
+      allow read: if member(hid);
+      // Immutable objects: replacement cannot turn a previously safe attachment into HTML.
+      allow create: if member(hid) && resource == null
+        && request.resource.size > 0 && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType in ['application/pdf', 'image/png', 'image/jpeg', 'image/webp']
+        && objectId.matches('^[a-f0-9-]{36}$');
+      allow delete: if member(hid);
+      allow update: if false;
+    }
+    // Other paths are denied by default. No anonymous or public access.
+  }
+}
