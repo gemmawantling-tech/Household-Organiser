@@ -1,0 +1,84 @@
+name: Firebase rules
+
+on:
+  pull_request:
+    paths: ['firestore.rules', 'invitation.js', 'tests/**', 'scripts/**', 'package*.json', 'firebase.json', '.github/workflows/firebase-rules.yml']
+  push:
+    branches: [main]
+    paths: ['firestore.rules', 'invitation.js', 'tests/**', 'scripts/**', 'package*.json', 'firebase.json', '.github/workflows/firebase-rules.yml']
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Verify access and preview, or publish tested rules'
+        type: choice
+        options: [verify, deploy]
+        default: verify
+        required: true
+      expected_live_sha256:
+        description: 'For deploy: paste the live rules SHA-256 from a previous verify run'
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firebase-rules-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm test
+      - run: npm run test:rules
+
+  firebase:
+    # Pull requests and pushes run tests only. Live access is manual and main-only.
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'gemmawantling-tech/Household-Organiser'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+      - name: Validate deployment confirmation before sign-in
+        env:
+          OPERATION: ${{ inputs.operation }}
+          EXPECTED_LIVE_SHA256: ${{ inputs.expected_live_sha256 }}
+        run: node scripts/deploy-rules.js --validate
+      - name: Sign in with short-lived Google credentials
+        id: auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: projects/966435670170/locations/global/workloadIdentityPools/github-household/providers/github
+          service_account: github-firebase-rules@home-organised.iam.gserviceaccount.com
+          token_format: access_token
+          create_credentials_file: false
+          access_token_lifetime: 600s
+      - name: Verify access or publish rules
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          OPERATION: ${{ inputs.operation }}
+          EXPECTED_LIVE_SHA256: ${{ inputs.expected_live_sha256 }}
+        run: node scripts/deploy-rules.js
