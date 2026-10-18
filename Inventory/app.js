@@ -36,7 +36,7 @@ const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':
 const fmt = value => Number(value).toLocaleString('en-GB',{maximumFractionDigits:2});
 const uid = () => 'id'+Date.now().toString(36)+Math.random().toString(36).slice(2,9);
 const newData = () => ({version:1,categories:JSON.parse(JSON.stringify(INITIAL_CATEGORIES)),items:[],recipes:[],settings:{people:4,mealsPerDay:1,waterPerPerson:3}});
-let state, activeTab = 'overview', categoryFilter = 'all', statusFilter = 'all', query = '', message = '';
+let state, activeTab = location.hash==='#stock'?'inventory':'overview', categoryFilter = 'all', statusFilter = 'all', query = '', message = '';
 function validData(d){
   if (!d || !Array.isArray(d.categories) || !Array.isArray(d.items) || !Array.isArray(d.recipes) || typeof d.settings !== 'object') throw Error('Not a valid Home Reserves backup');
   if (d.items.length > 20000 || d.categories.length > 500 || d.recipes.length > 2000) throw Error('Backup too large');
@@ -178,7 +178,7 @@ function itemCard(i){
   if(expiry!==null&&expiry<=30)badges+='<span class="badge red">'+(expiry<0?'Expired':expiry===0?'Expires today':'Expires in '+expiry+' days')+'</span>';
   return '<article class="item"><div class="item-header"><div><div class="item-title">'+escapeHTML(i.name)+'</div>'+badges+'</div><button class="text-button" data-action="editItem" data-id="'+escapeHTML(i.id)+'">Edit</button></div>'+ 
     (listed(i)&&max>0?'<div class="meter '+(below?'low':'')+'"><span style="width:'+Math.min(100,amount(i)*100/max)+'%"></span></div>':'')+
-    '<div class="item-bottom"><div class="counts">Current: <strong>'+(listed(i)?fmt(i.current):'—')+'</strong> '+escapeHTML(i.unit)+'<br>Optimum: <strong>'+(targeted(i)?fmt(i.optimum):'Not set')+'</strong> '+escapeHTML(i.unit)+
+    '<div class="item-bottom"><div class="counts">Current: <strong>'+(listed(i)?(i.unit==='£'?'£':'')+fmt(i.current):'—')+'</strong> '+(i.unit==='£'?'':escapeHTML(i.unit))+'<br>Optimum: <strong>'+(targeted(i)?(i.unit==='£'?'£':'')+fmt(i.optimum):'Not set')+'</strong> '+(i.unit==='£'?'':escapeHTML(i.unit))+
     (i.location?'<br>📍 '+escapeHTML(i.location):'')+(i.expiry?'<br>Expiry: '+escapeHTML(i.expiry):'')+(i.notes?'<br>'+escapeHTML(i.notes):'')+'</div>'+ 
     '<div class="stepper"><button type="button" data-action="minus" data-id="'+escapeHTML(i.id)+'" aria-label="Use one '+escapeHTML(i.name)+'" '+(!listed(i)||amount(i)<=0?'disabled':'')+'>−</button><strong>'+(listed(i)?fmt(i.current):'—')+'</strong><button type="button" data-action="plus" data-id="'+escapeHTML(i.id)+'" aria-label="Add one '+escapeHTML(i.name)+'">+</button></div></div></article>';
 }
