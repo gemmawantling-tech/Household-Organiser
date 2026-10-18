@@ -61,3 +61,11 @@ this workflow is publishing. GitHub workflow runs are serialized for main.
 Run `npm ci --ignore-scripts`, `npm test`, and `npm run test:rules` locally (Node 24,
 Java 21). Emulator tests use only `demo-household-organiser`. Dependency versions
 are locked, and GitHub Actions are pinned to immutable commits.
+
+## Event attachment Storage rules
+
+The event attachment feature adds `storage.rules` and Storage emulator tests.
+The workflow above still verifies/deploys **Firestore only**, and never deploys
+Storage automatically. See [EVENT-ATTACHMENTS.md](EVENT-ATTACHMENTS.md) for the
+manual Storage permissions, service-agent, CORS and approval steps. No Firestore
+rule change is needed for this feature.
