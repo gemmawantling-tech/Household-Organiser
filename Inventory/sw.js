@@ -1,5 +1,5 @@
 /* Home Reserves service worker: network-first, offline fallback. */
-const CACHE_NAME='home-reserves-v8';
+const CACHE_NAME='home-reserves-v9';
 const LOCAL_FILES=['./','./index.html','./app.css','./app.js','./planner.js','./recipe-library.js','./pantry-view.html','./three-week-review.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(LOCAL_FILES)).then(()=>self.skipWaiting()));
