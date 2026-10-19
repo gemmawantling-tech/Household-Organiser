@@ -13,3 +13,5 @@ Pack weights are shown under Ingredient and pack-size assumptions. Edit Food gra
 Data stays browser-local under the existing storage key. Export JSON backups regularly. Offline caching includes the planner after an online visit. No Organiser application files are changed.
 
 Run `npm test` from the repository root for calculation and existing application checks.
+
+Combination examples: a 250g microwave rice pouch plus a 250g bean sachet supports two adult portions at 125g of each ingredient per portion. Soup with tortilla crisps uses 400g soup plus 30g crisps per adult. Unspecified bean pouch/sachet size assumes 250g and tortilla crisp bags assume 180g; label weights override these assumptions. Cards display adult portions or child portions as alternatives, never as additive stock. Standalone soup and soup-with-crisps suggestions share the same soup allocation.

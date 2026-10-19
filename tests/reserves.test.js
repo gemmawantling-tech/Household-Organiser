@@ -70,3 +70,24 @@ test('legacy unchecked food does not block automatic ideas and zero children pro
  d.settings={people:4};run=app(d);assert.match(run('automaticMeals()'),/Set adult and child numbers/);
  assert.match(run('meals()'),/Optional: your own recipes/);
 });
+test('microwave rice pouch and beans sachet suggest two adult portions',()=>{
+ const run=app(data([item('r','Microwave rice',1,'pouch'),item('b','Black beans',1,'sachet')]));
+ assert.equal(run('ReservesPlanner.profile(itemById("r")).grams'),250);
+ assert.equal(run('ReservesPlanner.profile(itemById("b")).grams'),250);
+ assert.equal(run('calculateMeals(suggestions()).individually["auto:r:b:adult"]'),2);
+ assert.equal(run('ReservesPlanner.preparation(suggestions().find(r=>r.audience==="adult"),foodItems()).includes("sachet")'),true);
+});
+test('soup and tortilla crisps are combined and share soup with standalone options',()=>{
+ const run=app(data([item('s','Tomato soup',1,'tin'),item('c','Tortilla crisps',1,'180g bag')]));
+ assert.equal(run('suggestions().some(r=>r.name.startsWith("Soup with tortilla crisps"))'),true);
+ assert.equal(run('calculateMeals(suggestions()).individually["auto:s:c:adult"]'),1);
+ assert.equal(run('calculateMeals(suggestions()).portions'),1);
+ assert.match(run('automaticMeals()'),/adult portions or 2 child portions/);
+ assert.equal(run('ReservesPlanner.profile(itemById("c")).grams'),180);
+});
+test('recipe combinations follow explicit pack weights and require every ingredient',()=>{
+ const run=app(data([{...item('r','Microwave rice',1,'pouch'),gramsPerUnit:250},{...item('b','Beans',1,'sachet'),gramsPerUnit:100}]));
+ assert.equal(run('calculateMeals(suggestions()).individually["auto:r:b:adult"]'),0);
+ run('state.items=state.items.filter(i=>i.id!=="b")');
+ assert.equal(run('suggestions().some(r=>r.name==="Rice and beans")'),false);
+});
