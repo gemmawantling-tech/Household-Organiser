@@ -35,7 +35,7 @@
 
 ## Pending changes and recovery
 
-- The outbox key includes both household and UID. Reopen the same signed-in account
+- The outbox journal prefix includes both household and UID; each operation has a unique entry, and Chrome/PWA tabs serialize flushing with Web Locks. Reopen the same signed-in account
   to resume; do not clear site data, uninstall the PWA or switch phones before
   pending changes sync. A full storage warning means keep the tab open and export
   the current organiser from More. A blocked permission error requires access to

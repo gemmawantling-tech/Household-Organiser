@@ -35,7 +35,7 @@ the account/device checks in RELEASE-CHECKLIST.md before marking them deployed.
 | Calendar | No day/week/month switcher, events not assigned to people | Added views, stable recurring occurrences, member assignment and coloured labels; existing event editor/attachments reused |
 | Task editing | Browser prompt, small crowded edit/delete targets, labels not associated with checkboxes | Existing dialog reused for title/owner edits, options menu and checkbox labels; existing schedule retained |
 | Ownership | Names alone, inconsistent emphasis | Purple Gemma, blue Ben, amber Shared; visible text retained and selected filters outlined |
-| Firebase task sync | Transaction failures could leave local state without a durable retry queue | Per-user/per-household outbox with idempotent deltas, retry, status, storage-error and blocked-permission states |
+| Firebase task sync | Transaction failures could leave local state without a durable retry queue | Per-user/per-household per-operation journal with idempotent deltas, retry, status, storage-error and blocked-permission states |
 | Concurrent writes | Existing single-document server merge protects events; queued overlays needed protection too | Keep remote events/attachments and overlay outstanding local changes; test slow/offline/concurrent writes |
 | Authentication | Connection errors looked like first-time household setup | Separate connection/retry screen; scoped cache marker prevents using a previous household cache to seed a new household |
 | Sharing | Bearer invites have no expiry | Existing verified/member rules retained; added owner-only link replacement using the current allowed inviteCode update; existing members keep access |
@@ -67,9 +67,9 @@ it is not Firebase-synchronised. No sample stock quantities are inserted.
 
 ## Verification and honest limits
 
-- Unit suite: 57 tests, including dates/recurrence, carry-over, invitation joining,
+- Unit suite: 59 tests, including dates/recurrence, carry-over, invitation joining,
   deployment safeguards, recipe allocation, conflict merging, outbox restart,
-  quota/permission failures and worker cache isolation.
+  quota/permission failures, independent tab journals/serialized flushing, safe legacy queue recovery and worker cache isolation.
 - Firestore/Storage emulators: 12 tests against `demo-household-organiser` only.
   Verified members, wrong/rotated invitations, forged roles, cross-household reads,
   protected attachment paths/types/sizes owner rotation and two-client transaction merging are covered.
@@ -106,3 +106,5 @@ it is not Firebase-synchronised. No sample stock quantities are inserted.
 - Recurring edits apply to the whole series; per-occurrence exceptions/end dates
   and attachment orphan-retention tools remain separate work. Files are retained
   when an event is deleted to avoid irreversible file deletion.
+
+Chrome/PWA views on the same device journal operations independently and use Web Locks to serialize flushing. Browsers without Web Locks should use one editing tab at a time; unrelated-field merges still apply.

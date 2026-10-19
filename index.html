@@ -129,7 +129,7 @@ async function activate(hid,owner){
  }else remote=snap.data().data;
  if(!remote||typeof remote!=='object')throw Error('Shared data could not be read. No data was changed.');
  const uid=auth.currentUser.uid;window.householdScope=hid+':'+uid;
- outbox=HouseholdOutbox.create({storage:localStorage,key:'household-outbox-v1:'+hid+':'+uid,merge:HouseholdEvents.mergeChanges,online:()=>navigator.onLine!==false,onState:data=>{if(activeHouse===hid)receive(data)},onStatus:(...args)=>{if(activeHouse===hid)syncStatus(...args)},write:async op=>{
+ outbox=HouseholdOutbox.create({storage:localStorage,key:'household-outbox-v1:'+hid+':'+uid,merge:HouseholdEvents.mergeChanges,online:()=>navigator.onLine!==false,lock:fn=>navigator.locks?navigator.locks.request('household-sync:'+hid+':'+uid,fn):fn(),onState:data=>{if(activeHouse===hid)receive(data)},onStatus:(...args)=>{if(activeHouse===hid)syncStatus(...args)},write:async op=>{
    if(activeHouse!==hid||auth.currentUser?.uid!==uid)throw Error('Household session changed.');
    return runTransaction(db,async tx=>{const snapshot=await tx.get(target);if(!snapshot.exists())throw Error('Shared organiser unavailable');const data=HouseholdEvents.mergeChanges(snapshot.data().data,op.before,op.after);tx.update(target,{data,updatedAt:serverTimestamp()});return data});
  }});
@@ -147,6 +147,7 @@ window.householdSync={push(data){
  const serialized=JSON.stringify(cleanState(data));if(serialized===lastSent)return;
  const previous=JSON.parse(lastSent),next=JSON.parse(serialized);lastSent=serialized;outbox.enqueue(previous,next);
 },retry(){return outbox?.flush()},get pending(){return outbox?.pending||0}};
+window.addEventListener('storage',event=>{if(activeHouse&&event.key?.startsWith('household-outbox-v1:'+activeHouse+':'+auth.currentUser?.uid+'/'))outbox?.flush()});
 window.addEventListener('online',()=>outbox?.flush());window.addEventListener('offline',()=>syncStatus('offline',null,outbox?.pending||0));
 ui('syncRetry').onclick=()=>outbox?.flush();
 // Transactions change only the selected event in the existing organiser document.

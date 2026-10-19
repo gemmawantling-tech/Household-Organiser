@@ -10,6 +10,11 @@ const storage = () => {
   return {
     getItem: (k) => map.get(k) || null,
     setItem: (k, v) => map.set(k, v),
+    removeItem: (k) => map.delete(k),
+    key: (i) => Array.from(map.keys())[i],
+    get length() {
+      return map.size;
+    },
   };
 };
 const base = () => ({
@@ -102,6 +107,9 @@ test("outboxes are isolated by household and user; storage failure is never repo
     full = create({
       storage: {
         getItem: () => null,
+        length: 0,
+        key: () => null,
+        removeItem: () => {},
         setItem: () => {
           throw Error("Quota");
         },
@@ -184,5 +192,63 @@ test("slow writes keep newer local edits and concurrent remote data until both c
   assert.equal(remote.completed.a, true);
   assert.equal(remote.completed.b, true);
   assert.equal(remote.events.length, 2);
+  q.close();
+});
+test("two tabs journal edits independently and serialize flushing without losing either pending record", async () => {
+  const store = storage();
+  let online = false,
+    remote = base(),
+    tail = Promise.resolve(),
+    writes = 0;
+  const lock = (fn) => {
+    const result = tail.then(fn);
+    tail = result.catch(() => {});
+    return result;
+  };
+  const options = {
+    storage: store,
+    key: "same-house:same-user",
+    merge,
+    online: () => online,
+    lock,
+    write: async (op) => {
+      writes++;
+      return (remote = merge(remote, op.before, op.after));
+    },
+  };
+  const first = create(options),
+    second = create(options);
+  first.enqueue(base(), { ...base(), completed: { first: true } });
+  second.enqueue(base(), { ...base(), completed: { second: true } });
+  await Promise.all([first.flush(), second.flush()]);
+  assert.equal(first.pending, 2);
+  assert.equal(second.pending, 2);
+  online = true;
+  await Promise.all([first.flush(), second.flush()]);
+  assert.equal(first.pending, 0);
+  assert.equal(second.pending, 0);
+  assert.equal(writes, 2);
+  assert.equal(remote.completed.first, true);
+  assert.equal(remote.completed.second, true);
+  first.close();
+  second.close();
+});
+test("legacy pending arrays migrate without deleting their changes", async () => {
+  const store = storage(),
+    before = base(),
+    after = { ...before, completed: { legacy: true } };
+  store.setItem("old", JSON.stringify([{ before, after }]));
+  let result;
+  const q = create({
+    storage: store,
+    key: "old",
+    merge,
+    write: async (op) => (result = merge(base(), op.before, op.after)),
+  });
+  assert.equal(q.pending, 1);
+  assert.equal(store.getItem("old"), null);
+  await q.flush();
+  assert.equal(result.completed.legacy, true);
+  assert.equal(q.pending, 0);
   q.close();
 });
