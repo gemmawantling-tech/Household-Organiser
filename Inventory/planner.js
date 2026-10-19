@@ -20,21 +20,30 @@ function suggest(items,settings){
  if(!h.kids)return adult;
  const kids=[];
  const mode=settings.kidPreparation||'separate';
- const accepted=items.filter(i=>i.kidAccepted===true);
+ const accepted=items.filter(i=>i.kidPreference!=='no'&&(settings.kidFoodMode!=='confirmed'||i.kidPreference==='yes'||i.kidAccepted===true));
  const acceptedIds=new Set(accepted.map(i=>i.id));
- // Never presume a food is accepted just because it is mild or served in a small portion.
+ // Suggest by default, while respecting explicit dislikes. Confirmed-only mode is optional.
  for(const r of out){
    if(!r.ingredients.every(ing=>acceptedIds.has(ing.itemId)))continue;
    if(mode==='plain'&&r.ingredients.length>1)continue;
-   kids.push({...r,id:r.id+':kids',audience:'kids',name:mode==='separate'&&r.ingredients.length>1?r.name+' (served separately)':r.name,note:mode==='separate'?'Keep each ingredient separate on the plate; offer sauce at the side.':'Use the familiar preparation your children accept.'});
+   kids.push({...r,id:r.id+':kids',audience:'kids',name:mode==='separate'&&r.ingredients.length>1?r.name+' (served separately)':r.name,note:mode==='separate'?'Keep each ingredient separate on the plate; offer sauce at the side.':'Try a simple, mild preparation; check whether your children will eat it.'});
  }
  for(const kind of ['pasta','rice','oats'])for(const {i,p} of groups[kind]||[]){
    if(!acceptedIds.has(i.id))continue;
-   kids.push({id:'plain:'+i.id+':kids',name:kind==='oats'?'Plain porridge with water':'Plain '+kind,audience:'kids',portions:1,note:'A familiar fallback. No sauce, seasoning or extras assumed. This alone is not a balanced meal.',ingredients:[{itemId:i.id,amount:p.serving/p.grams}]});
+   kids.push({id:'plain:'+i.id+':kids',name:kind==='oats'?'Plain porridge with water':'Plain '+kind,audience:'kids',portions:1,note:'A simple fallback to try. No sauce, seasoning or extras assumed. This alone is not a balanced meal.',ingredients:[{itemId:i.id,amount:p.serving/p.grams}]});
  }
  // Alternate child and adult options so shared staples cannot all go to adults first.
  const combined=[];for(let i=0;i<Math.max(adult.length,kids.length);i++){if(kids[i])combined.push(kids[i]);if(adult[i])combined.push(adult[i]);}
  return combined;
 }
-root.ReservesPlanner={profile,household,suggest};
+function preparation(recipe,items){
+ const kinds=recipe.ingredients.map(ing=>profile(items.find(i=>i.id===ing.itemId)||{})?.kind);
+ if(kinds.includes('pasta'))return 'Boil the pasta following the packet. '+(kinds.includes('sauce')?'Heat the sauce separately and serve alongside or stir in.':'Drain and serve plain.');
+ if(kinds.includes('rice'))return 'Cook or heat the rice following its packet. '+(kinds.includes('lentils')?'Cook lentils fully according to their packet; serve alongside the rice.':kinds.includes('beans')?'Prepare the beans according to the tin or packet and serve alongside.':'Serve plain.');
+ if(kinds.includes('oats'))return 'Cook oats with '+(kinds.includes('milk')?'the milk':'water')+' following the packet, until soft. Allow to cool before serving.';
+ if(kinds.includes('soup'))return 'Heat the soup following the tin or packet directions. Cool children’s servings.';
+ if(kinds.includes('noodles'))return 'Cook noodles following the packet. Keep any seasoning sachet separate for children.';
+ return 'Prepare following the product label; check suitability for your children.';
+}
+root.ReservesPlanner={profile,household,suggest,preparation};
 })(globalThis);

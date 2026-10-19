@@ -31,12 +31,12 @@ test('old saved households keep their size and recipe plans stay separate',()=>{
  const run=app(d);assert.equal(run('household().adults'),5);assert.equal(run('calculateMeals().portions'),4);assert.equal(run('calculateMeals(suggestions()).portions'),2);
 });
 test('fussy children only get explicitly accepted foods, including plain pasta without sauce',()=>{
- const d=data([{...item('p','Pasta',750),kidAccepted:true},item('s','Pasta sauce',1500)]),run=app(d);
+ const d=data([{...item('p','Pasta',750),kidAccepted:true},item('s','Pasta sauce',1500)]);d.settings.kidFoodMode='confirmed';const run=app(d);
  assert.equal(run('suggestions().filter(r=>r.audience==="kids").length'),1);
  assert.equal(run('suggestions().find(r=>r.audience==="kids").name'),'Plain pasta');
  assert.equal(run('suggestions().find(r=>r.audience==="kids").ingredients.length'),1);
  assert.ok(run('calculateMeals(suggestions()).kidPortions')>0);
- assert.match(run('automaticMeals()'),/CHILDREN · ACCEPTED FOODS ONLY/);
+ assert.match(run('automaticMeals()'),/SIMPLE CHILDREN’S IDEA/);
 });
 test('plain preference excludes mixed options and separate preference labels them',()=>{
  const d=data([{...item('r','Rice',750),kidAccepted:true},{...item('b','Beans',2000),kidAccepted:true}]);d.settings.kidPreparation='plain';const run=app(d);
@@ -45,8 +45,28 @@ test('plain preference excludes mixed options and separate preference labels the
  assert.equal(run('suggestions().some(r=>r.audience==="kids"&&r.name.includes("served separately"))'),true);
 });
 test('adult supplies cannot imply coverage for children with no accepted foods',()=>{
- const run=app(data([item('s','Soup',4000)]));
+ const d=data([item('s','Soup',4000)]);d.settings.kidFoodMode='confirmed';const run=app(d);
  assert.equal(run('calculateMeals(suggestions()).kidPortions'),0);
- assert.match(run('automaticMeals()'),/Children’s coverage is zero/);
+ assert.match(run('automaticMeals()'),/No children’s meal ideas match/);
  assert.match(run('automaticMeals()'),/class="value">0<\/div><div class="label">Food days/);
+});
+
+test('inventory alone produces children and adult meals with quantities and preparation',()=>{
+ const run=app(data([item('p','Pasta',750),item('s','Pasta sauce',1500)]));
+ assert.ok(run('suggestions().some(r=>r.audience==="kids")'));
+ assert.ok(run('suggestions().some(r=>r.audience==="adult")'));
+ assert.ok(run('calculateMeals(suggestions()).kidPortions')>0);
+ assert.match(run('automaticMeals()'),/Boil the pasta/);
+ assert.match(run('automaticMeals()'),/75 g Pasta/);
+});
+test('optional child dislikes exclude food without removing adult recipes',()=>{
+ const run=app(data([{...item('p','Pasta',750),kidPreference:'no'},item('s','Pasta sauce',1500)]));
+ assert.equal(run('suggestions().some(r=>r.audience==="kids")'),false);
+ assert.equal(run('suggestions().some(r=>r.audience==="adult")'),true);
+});
+test('legacy unchecked food does not block automatic ideas and zero children prompts setup',()=>{
+ const d=data([{...item('p','Pasta',750),kidAccepted:false}]);
+ let run=app(d);assert.ok(run('suggestions().some(r=>r.audience==="kids")'));
+ d.settings={people:4};run=app(d);assert.match(run('automaticMeals()'),/Set adult and child numbers/);
+ assert.match(run('meals()'),/Optional: your own recipes/);
 });
