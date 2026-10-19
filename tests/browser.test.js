@@ -20,8 +20,8 @@ export async function runTransaction(db,fn){const result=await fn({get:async()=>
 `;
 const auth=`export const getAuth=()=>({currentUser:{uid:'gemma',emailVerified:true}});export const onAuthStateChanged=(auth,fn)=>fn(auth.currentUser);export const signInWithEmailAndPassword=()=>{},createUserWithEmailAndPassword=()=>{},sendEmailVerification=()=>{},sendPasswordResetEmail=()=>{},signOut=()=>{},reload=()=>{};`;
 const storage=`export const getStorage=()=>({});export const ref=(s,path)=>({fullPath:path});globalThis.mockFiles=new Map();export const uploadBytes=async(ref,file)=>{mockFiles.set(ref.fullPath,file)};export const getBlob=async ref=>mockFiles.get(ref.fullPath);export const deleteObject=async ref=>mockFiles.delete(ref.fullPath);`;
-test('mobile event details, save, recurrence, attachment and error flows preserve existing data',async()=>{
-  const server=createServer(async(req,res)=>{try{const path=new URL(req.url,'http://localhost').pathname;const file=path==='/'?'index.html':path.slice(1);if(!['index.html','events.js','invitation.js'].includes(file)){res.writeHead(404).end();return;}res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':'text/html');res.end(await readFile(file));}catch{res.writeHead(500).end()}});
+test('mobile event and dated carry-over flows preserve shared tasks and attachments',async()=>{
+  const server=createServer(async(req,res)=>{try{const path=new URL(req.url,'http://localhost').pathname;const file=path==='/'?'index.html':path.slice(1);if(!['index.html','events.js','tasks.js','invitation.js'].includes(file)){res.writeHead(404).end();return;}res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':'text/html');res.end(await readFile(file));}catch{res.writeHead(500).end()}});
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const browser=await chromium.launch({...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{}),args:['--no-sandbox']});
   try{
@@ -77,6 +77,27 @@ test('mobile event details, save, recurrence, attachment and error flows preserv
     page.once('dialog',dialog=>dialog.accept());await page.locator('#deleteEvent').click();await page.locator('#modal').waitFor({state:'hidden'});
     assert.equal(await page.evaluate(()=>mockData.events.some(e=>e.title==='Anniversary')),false);
     assert.equal(await page.evaluate(()=>mockData.events.some(e=>e.id==='remote')),true);
+    // Dated jobs carry into today using the same original completion/owner keys.
+    await page.locator('#todayBtn').click();
+    const today=await page.locator('#datePicker').inputValue();
+    const yesterday=await page.evaluate(()=>{const d=new Date();d.setDate(d.getDate()-1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`});
+    await page.locator('#focusAdd').click();await page.locator('#editText').fill('Book carry-over dentist');await page.locator('#editDate').fill(yesterday);await page.locator('#editOwner').selectOption('Ben');
+    await page.locator('#editor').getByRole('button',{name:'Save',exact:true}).click();await page.locator('#modal').waitFor({state:'hidden'});
+    await page.getByText('✓ Saved and shared',{exact:true}).waitFor();
+    await page.locator('#todayBtn').click();
+    let row=page.locator('#focusItems .task').filter({hasText:'Book carry-over dentist'});
+    assert.equal(await row.count(),1);assert.match(await row.textContent(),/Carried over/);assert.equal(await row.locator('.owner').textContent(),'Ben');
+    await page.getByRole('button',{name:"Ben's",exact:true}).click();assert.equal(await row.count(),1);
+    await page.getByRole('button',{name:'Mine',exact:true}).click();assert.equal(await row.count(),0);
+    await page.getByRole('button',{name:'Everyone',exact:true}).click();
+    page.once('dialog',dialog=>dialog.accept('Dentist booking edited'));await row.getByTitle('Edit task').click();
+    row=page.locator('#focusItems .task').filter({hasText:'Dentist booking edited'});assert.equal(await row.count(),1);
+    await row.locator('input[type=checkbox]').click();await page.getByText('✓ Saved and shared',{exact:true}).waitFor();assert.equal(await row.count(),0);
+    data=await page.evaluate(()=>mockData);
+    const carriedTask=data.custom[`${yesterday}|Today's Jobs`].find(t=>t.text==='Dentist booking edited');
+    assert.ok(carriedTask);assert.equal(data.completed[`${yesterday}|Today's Jobs|${carriedTask.id}`],true);
+    assert.equal(Object.values(data.custom).flat().filter(t=>t.id===carriedTask.id).length,1);
+    assert.deepEqual(data.events.find(e=>e.id==='legacy').attachments.length,1);
     assert.deepEqual(errors,[]);
   }finally{await browser.close();await new Promise(resolve=>server.close(resolve))}
 });

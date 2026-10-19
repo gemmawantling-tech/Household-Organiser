@@ -2,10 +2,10 @@ name: Firebase rules
 
 on:
   pull_request:
-    paths: ['firestore.rules', 'storage.rules', 'events.js', 'index.html', 'invitation.js', 'tests/**', 'scripts/**', 'package*.json', 'firebase.json', '.github/workflows/firebase-rules.yml']
+    paths: ['firestore.rules', 'storage.rules', 'events.js', 'index.html', 'tasks.js', 'invitation.js', 'tests/**', 'scripts/**', 'package*.json', 'firebase.json', '.github/workflows/firebase-rules.yml']
   push:
     branches: [main]
-    paths: ['firestore.rules', 'storage.rules', 'events.js', 'index.html', 'invitation.js', 'tests/**', 'scripts/**', 'package*.json', 'firebase.json', '.github/workflows/firebase-rules.yml']
+    paths: ['firestore.rules', 'storage.rules', 'events.js', 'index.html', 'tasks.js', 'invitation.js', 'tests/**', 'scripts/**', 'package*.json', 'firebase.json', '.github/workflows/firebase-rules.yml']
   workflow_dispatch:
     inputs:
       operation:
