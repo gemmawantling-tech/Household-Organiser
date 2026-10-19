@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/invitation.test.js tests/deploy-rules.test.js tests/events.test.js tests/reserves.test.js tests/tasks.test.js",
+    "test": "node --test tests/invitation.test.js tests/deploy-rules.test.js tests/events.test.js tests/reserves.test.js tests/tasks.test.js tests/calendar.test.js tests/sync.test.js tests/service-worker.test.js",
     "test:rules": "firebase emulators:exec --only firestore,storage --project demo-household-organiser 'node --test tests/rules.test.js tests/storage.test.js'",
     "test:browser": "node --test tests/browser.test.js"
   },

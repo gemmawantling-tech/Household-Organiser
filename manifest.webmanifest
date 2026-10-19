@@ -1,12 +1,12 @@
 {
   "name": "Household Organiser",
   "short_name": "Organiser",
-  "description": "Daily household checklists and shopping lists",
+  "description": "Shared household tasks, calendar, routines and shopping",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f4f6f2",
-  "theme_color": "#476c59",
+  "background_color": "#faf8f3",
+  "theme_color": "#365d49",
   "icons": [
     {
       "src": "icon-192.png",

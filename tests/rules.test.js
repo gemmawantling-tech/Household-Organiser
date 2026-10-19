@@ -3,7 +3,7 @@ import {before,after,test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {initializeTestEnvironment,assertSucceeds,assertFails} from '@firebase/rules-unit-testing';
-import {doc,getDoc,setDoc,writeBatch,runTransaction,serverTimestamp,collection,getDocs} from 'firebase/firestore';
+import {doc,getDoc,setDoc,writeBatch,runTransaction,serverTimestamp,collection,getDocs,updateDoc} from 'firebase/firestore';
 let env;const hid='a'.repeat(36),code='b'.repeat(36);
 const db=(uid,verified=true)=>env.authenticatedContext(uid,{email:`${uid}@example.com`,email_verified:verified}).firestore();
 before(async()=>{env=await initializeTestEnvironment({projectId:'demo-household-organiser',firestore:{rules:readFileSync('firestore.rules','utf8')}});await env.withSecurityRulesDisabled(async c=>{const d=c.firestore();await setDoc(doc(d,'households',hid),{name:'Existing',ownerUid:'gemma',inviteCode:code});await setDoc(doc(d,'households',hid,'members','gemma'),{uid:'gemma',role:'owner'});await setDoc(doc(d,'profiles','gemma'),{householdId:hid});for(const col of ['tasks','events','reminders'])await setDoc(doc(d,'households',hid,col,'existing'),{title:'Keep me'});});});
@@ -16,3 +16,5 @@ test('existing profile in another household cannot join',async()=>{await env.wit
 test('new household owner bootstrap remains atomic',async()=>{const d=db('newowner'),b=writeBatch(d),id='c'.repeat(36);b.set(doc(d,'households',id),{name:'New',ownerUid:'newowner',inviteCode:code,createdAt:serverTimestamp()});b.set(doc(d,'households',id,'members','newowner'),{uid:'newowner',email:'newowner@example.com',role:'owner',joinedAt:serverTimestamp()});b.set(doc(d,'profiles','newowner'),{householdId:id,email:'newowner@example.com'});await assertSucceeds(b.commit());});
 
 test('creation helper works and refuses a second household',async()=>{const d=db('creator'),args={db:d,doc,runTransaction,serverTimestamp,user:{uid:'creator',email:'creator@example.com',emailVerified:true,getIdToken:async()=>{}},id:'d'.repeat(36),code,name:'New household'};await assertSucceeds(createNewHousehold(args));await assert.rejects(createNewHousehold({...args,id:'e'.repeat(36)}),/already has a household/);});
+
+test('only the owner can replace invitations; old links stop joining while existing members keep access',async()=>{const next='f'.repeat(36);await assertFails(updateDoc(doc(db('ben'),'households',hid),{inviteCode:next}));await assertSucceeds(updateDoc(doc(db('gemma'),'households',hid),{inviteCode:next}));await assertFails(join(db('expired-link'),'expired-link',code));await assertSucceeds(join(db('new-link'),'new-link',next));await assertSucceeds(getDoc(doc(db('ben'),'households',hid,'tasks','existing')));});
