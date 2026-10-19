@@ -1,31 +1,54 @@
 # Home Reserves
 
-Add counted food and quantities in Stock, then open Meals. Adult and simple children’s meal ideas, ingredient quantities, portions, preparation steps and coverage estimates update automatically. Set adult/child numbers and daily meals once in More. Existing saved household counts are retained; a household with zero children shows a setup prompt.
+Count food in Stock and open Meals. Suggestions match the inventory on this
+browser; no inventory data is sent to a recipe website or AI service. Existing
+stock, household settings, saved manual recipes and the storage key are preserved.
 
-Children’s suggestions default to simple foods and separate ingredients, without requiring an accepted-food list. Optional stock preferences are Suggest automatically, They will eat this, and They will not eat this. Explicit dislikes are excluded from children’s suggestions. More also offers a confirmed-food-only mode and plain/separate/mixed preparation preferences. Suggestions are ideas to try, not proof that a child will eat a food. Preferences apply to all children together.
+The library includes practical pantry adaptations: peanut–soy noodles with
+roasted peppers and peas; tomato/tuna/pepper pasta; tuna/sweetcorn/pesto pasta;
+pepper/pea/pesto pasta; bean-and-pepper tomato rice; chickpea-and-pepper rice;
+lentil-and-pepper ragù; and bean or chickpea quesadillas with cheese and peppers.
+Simple breakfasts, light meals and packaged meals are labelled accordingly.
+Bare noodles, plain rice, rice with baked beans, plain pasta and soup-with-crisps
+are not counted as meal suggestions. Custom recipes remain a separate option.
 
-Supported suggestions include pasta with tomato sauce, rice and beans, lentils with rice, porridge, soup, noodles, ready-to-eat meals and plain staple fallbacks for children. Unrecognised foods are listed separately; custom recipes are available in the optional section. Manual recipes are a separate alternative plan and never added to automatic totals.
+Every required ingredient must be counted, unexpired stock. The matcher recognises
+soy sauce, roasted peppers and pesto, distinguishes chickpeas and baked beans from
+plain beans, and does not treat coconut milk as dairy milk. One-missing-ingredient
+ideas appear separately and do not add portions to coverage. The source links are
+inspiration, not a claim to reproduce the publisher's dish: each card names its
+adaptation and does not assume omitted ingredients are available.
 
-Recipe cards show ingredient grams (ml for milk) alongside inventory units, quantities for the adult or child group, standalone portion capacity and shared-plan allocations. Stock is shared once across suggestions. The smaller adult or child coverage limits whole-household coverage; allocation order may affect the result. Very large inventories may hit the displayed allocation limit.
+Children's portions can be served separately from the same ingredients; explicitly
+disliked foods and spicy foods are excluded. In confirmed-only mode, every ingredient
+must be accepted. Plain-only mode excludes mixed recipes; staple-only fallbacks no
+longer inflate coverage. These are suggestions, not confirmed preferences.
 
-Pack weights are shown under Ingredient and pack-size assumptions. Edit Food grams per stock unit (ml for milk) to match labels. Dry and microwave rice use different portion sizes. Past-expiry stock is excluded; undated food still needs checking. Check allergies, cooking fuel, labels, preparation and individual needs. Simple staple-only fallbacks are not balanced meals. Days estimate meal coverage, not survival time or nutritional adequacy.
+Recipe cards show ingredient grams (ml for milk), stock units, group amounts and
+capacity. Dry and microwave rice differ; ready-cooked lentils use a different amount
+from dry lentils. Stock is shared once across recipes. IDs include the recipe key
+to avoid two variations colliding in allocations. Portions are planning assumptions,
+not publisher nutrition figures. Household coverage is limited by whichever group
+(adults or children) has fewer supported meals. Counts can fall when previous
+staple-only suggestions are removed; this does not mean stock was deleted.
 
-Data stays browser-local under the existing storage key. Export JSON backups regularly. Offline caching includes the planner after an online visit. No Organiser application files are changed.
+Use usable/drained weights from labels, check cooking directions and allergens,
+and set the daily meal rate to match the meals you are planning. These estimates
+are not a nutritional assessment. Existing exports and manual recipes still work.
+The service-worker version is advanced to refresh the offline recipe library.
 
-Run `npm test` from the repository root for calculation and existing application checks.
+## Recipe research, 19 October 2026
 
-Combination examples: a 250g microwave rice pouch plus a 250g bean sachet supports two adult portions at 125g of each ingredient per portion. Soup with tortilla crisps uses 400g soup plus 30g crisps per adult. Unspecified bean pouch/sachet size assumes 250g and tortilla crisp bags assume 180g; label weights override these assumptions. Cards display adult portions or child portions as alternatives, never as additive stock. Standalone soup and soup-with-crisps suggestions share the same soup allocation.
+Reviewed ingredient lists and methods, not just search-result titles:
+- [Good Food: storecupboard pasta salad](https://www.bbcgoodfoodme.com/recipes/storecupboard-pasta-salad/)
+- [Good Food: tomato, pepper and bean one-pot](https://www.bbcgoodfoodme.com/recipes/tomato-pepper-bean-one-pot/)
+- [Good Food: red lentil, chickpea and chilli soup](https://www.bbcgoodfoodme.com/recipes/red-lentil-chickpea-and-chilli-soup/)
+- [Good Food: satay noodle soup](https://www.bbcgoodfoodme.com/recipes/satay-noodle-soup/)
+- [Good Food: refried bean quesadillas](https://www.bbcgoodfoodme.com/recipes/refried-bean-quesadillas/)
+- [Budget Bytes: cold peanut noodle salad](https://www.budgetbytes.com/cold-peanut-noodle-salad/)
 
-## Broader recipe ideas
+The app uses original, simpler pantry methods and estimated portions. It links
+back to the source so the full recipe and fresh-ingredient versions are available.
+Matching works offline and does not search the web live.
 
-The bundled 28-idea library matches counted, unexpired ingredients automatically, including three-ingredient combinations. It includes tuna/sweetcorn pasta, tuna/tomato pasta, pesto pasta, bean/tomato rice, pepper/bean pots, lentil/tomato soups, peanut noodles, cheese/bean wraps, soup with bread and simple breakfasts. It recognises tuna, sweetcorn, peas, roasted peppers, peanut butter, soy sauce, pesto, cheese, wraps and bread as well as the original staples. Unspecified sizes remain estimates; enter usable/drained weights from labels for better quantities. Known spicy stock is excluded from children’s suggestions.
-
-Recipes are original simplified pantry adaptations, researched from online recipe ideas. Card links identify inspiration; methods and portions use app assumptions rather than reproducing the publishers’ recipes. Matching runs offline against this library; it is not live web search or an AI service. The app cannot access another device’s browser inventory. One-missing-ingredient ideas appear separately and do not contribute to coverage.
-
-Sources reviewed:
-- https://www.bbcgoodfood.com/recipes/storecupboard-pasta-salad
-- https://www.bbcgoodfood.com/recipes/tomato-pepper-bean-one-pot
-- https://www.bbcgoodfood.com/recipes/red-lentil-chickpea-chilli-soup
-- https://www.bbcgoodfood.com/recipes/satay-noodle-soup
-- https://www.bbcgoodfoodme.com/recipes/refried-bean-quesadillas/
-- https://www.bbcgoodfoodme.com/recipes/spicy-chilli-bean-soup/
+Run `npm test` from the repository root for planner and existing app checks.
