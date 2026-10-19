@@ -87,6 +87,14 @@ test('mobile event and dated carry-over flows preserve shared tasks and attachme
     await page.locator('#todayBtn').click();
     let row=page.locator('#focusItems .task').filter({hasText:'Book carry-over dentist'});
     assert.equal(await row.count(),1);assert.match(await row.textContent(),/Carried over/);assert.equal(await row.locator('.owner').textContent(),'Ben');
+    assert.equal(await row.getAttribute('data-owner'),'Ben');
+    const colours=[];
+    for(const owner of ['Ben','Shared','Gemma']){
+      assert.equal(await row.getAttribute('data-owner'),owner);
+      colours.push(await row.locator('.owner').evaluate(el=>getComputedStyle(el).backgroundColor));
+      await row.getByTitle('Change who does this job').click();
+    }
+    assert.equal(new Set(colours).size,3);assert.equal(await row.getAttribute('data-owner'),'Ben');
     await page.getByRole('button',{name:"Ben's",exact:true}).click();assert.equal(await row.count(),1);
     await page.getByRole('button',{name:'Mine',exact:true}).click();assert.equal(await row.count(),0);
     await page.getByRole('button',{name:'Everyone',exact:true}).click();

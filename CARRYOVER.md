@@ -27,3 +27,12 @@ Validation: unit tests cover missed days, completion/undo, removed jobs, old rec
 invalid dates and exclusion of repeats/future dates. The mocked mobile browser test
 covers creating a dated job, carry-over, owner filtering, editing and ticking the
 original record while preserving calendar attachments. No production data is used.
+
+## Job colours
+
+Gemma’s jobs use purple, Ben’s blue, and Shared jobs amber. Job rows and name
+badges use the same palette in today’s list, carried actions, routine checklists,
+monthly audit and next-seven-days priorities. Person filters repeat the colours
+with a visible selection outline. Names remain visible, so identification does
+not depend on colour. Reassigning a job changes its colour immediately and uses
+the existing shared ownership record. No data conversion is required.

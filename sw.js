@@ -1,4 +1,4 @@
-const CACHE='household-organiser-v6';
+const CACHE='household-organiser-v7';
 const ASSETS=['./','./index.html','./events.js','./tasks.js','./invitation.js','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));self.skipWaiting()});
 self.addEventListener('activate',event=>{event.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('household-organiser-')&&k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()]))});
