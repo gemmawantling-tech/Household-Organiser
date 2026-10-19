@@ -47,7 +47,7 @@
   to five recent snapshots for download, without deleting older saved snapshots.
   If the recovery copy cannot be written, importing stops. Importing affects the
   shared household and requires an explicit confirmation.
-- A corrupt outbox is left intact and blocks silent replacement. Preserve the
+- A corrupt outbox is left intact and blocks silent replacement. The connection-recovery screen offers a cached backup download only when the cache is marked as belonging to the signed-in account. Preserve the
   browser/site data before requesting recovery. Do not clear the queue to make an
   error disappear; export the cached view and have the owner review pending data.
 - A rollback restores the previous frontend commit and waits for Pages deployment.
