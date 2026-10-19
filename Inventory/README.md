@@ -11,3 +11,9 @@ Days are approximate meal coverage, not survival time or nutritional adequacy. F
 Data remains browser-local under the existing storage key. Export a JSON backup regularly. Updated planner files are cached for offline use after an online visit.
 
 Run `npm test` from the repository root for calculations and existing application checks.
+
+## Fussy children
+
+Edit each stock item to mark “All children will eat this food”. Nothing is assumed accepted by default. In More, choose separate foods / sauce on the side, plain single-food options, or familiar mixed meals. Children get suggestions only from explicitly accepted foods; adults keep their own suggestions. Plain pasta, rice, and porridge with water are available without requiring sauces or milk. Simple staple-only fallbacks are not balanced meals.
+
+Food coverage is limited by the smaller adult or child coverage, sharing one stock pool. The planner also shows accepted-food days for children. Preferences currently apply to foods all children accept; separate individual child profiles are not supported.

@@ -30,3 +30,23 @@ test('old saved households keep their size and recipe plans stay separate',()=>{
  const d=data([item('s','Soup',800)]);d.settings={people:5,mealsPerDay:1};d.recipes=[{id:'custom',portions:2,ingredients:[{itemId:'s',amount:400}]}];
  const run=app(d);assert.equal(run('household().adults'),5);assert.equal(run('calculateMeals().portions'),4);assert.equal(run('calculateMeals(suggestions()).portions'),2);
 });
+test('fussy children only get explicitly accepted foods, including plain pasta without sauce',()=>{
+ const d=data([{...item('p','Pasta',750),kidAccepted:true},item('s','Pasta sauce',1500)]),run=app(d);
+ assert.equal(run('suggestions().filter(r=>r.audience==="kids").length'),1);
+ assert.equal(run('suggestions().find(r=>r.audience==="kids").name'),'Plain pasta');
+ assert.equal(run('suggestions().find(r=>r.audience==="kids").ingredients.length'),1);
+ assert.ok(run('calculateMeals(suggestions()).kidPortions')>0);
+ assert.match(run('automaticMeals()'),/CHILDREN · ACCEPTED FOODS ONLY/);
+});
+test('plain preference excludes mixed options and separate preference labels them',()=>{
+ const d=data([{...item('r','Rice',750),kidAccepted:true},{...item('b','Beans',2000),kidAccepted:true}]);d.settings.kidPreparation='plain';const run=app(d);
+ assert.equal(run('suggestions().filter(r=>r.audience==="kids").every(r=>r.ingredients.length===1)'),true);
+ run('state.settings.kidPreparation="separate"');
+ assert.equal(run('suggestions().some(r=>r.audience==="kids"&&r.name.includes("served separately"))'),true);
+});
+test('adult supplies cannot imply coverage for children with no accepted foods',()=>{
+ const run=app(data([item('s','Soup',4000)]));
+ assert.equal(run('calculateMeals(suggestions()).kidPortions'),0);
+ assert.match(run('automaticMeals()'),/Children’s coverage is zero/);
+ assert.match(run('automaticMeals()'),/class="value">0<\/div><div class="label">Food days/);
+});

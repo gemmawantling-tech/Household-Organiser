@@ -81,7 +81,7 @@ function requirements(recipe){
   return needed;
 }
 const household = () => ReservesPlanner.household(state.settings);
-const suggestions = () => ReservesPlanner.suggest(foodItems());
+const suggestions = () => ReservesPlanner.suggest(foodItems(),state.settings);
 function calculateMeals(recipes=state.recipes){
   const remaining={};state.items.forEach(i=>remaining[i.id]=amount(i));
   const allocated={};recipes.forEach(r=>allocated[r.id]=0);
@@ -104,7 +104,8 @@ function calculateMeals(recipes=state.recipes){
     }
   }
   const portions=recipes.reduce((sum,r)=>sum+(allocated[r.id]||0)*(Number(r.portions)||0),0);
-  return {allocated,individually,portions,capped:passes>=10000};
+  const audiencePortions=audience=>recipes.filter(r=>r.audience===audience).reduce((sum,r)=>sum+(allocated[r.id]||0)*r.portions,0);
+  return {allocated,individually,portions,adultPortions:audiencePortions('adult'),kidPortions:audiencePortions('kids'),capped:passes>=10000};
 }
 function field(name,label,value='',extra=''){
   return '<div class="field"><label for="f_'+name+'">'+label+'</label><input id="f_'+name+'" name="'+name+'" value="'+escapeHTML(value)+'" '+extra+'></div>';
@@ -129,6 +130,7 @@ function editItem(id){
     field('location','Storage location',i?.location||'','maxlength="90" placeholder="Utility cupboard"')+'</div>'+
     '<div class="split">'+field('expiry','Earliest expiry date',i?.expiry||'','type="date"')+
     field('litresPerUnit','Litres per item (for water)',i?.litresPerUnit??'','type="number" min="0" step="any" placeholder="e.g. 5"')+'</div>'+
+    '<div class="field"><label><input type="checkbox" name="kidAccepted" '+(i?.kidAccepted?'checked':'')+'> All children will eat this food</label><p class="hint">Tick only familiar foods they reliably accept. Kid suggestions use these foods only. For different preferences, use the foods all children accept.</p></div>'+
     field('gramsPerUnit','Food grams per stock unit (ml for milk)',i?.gramsPerUnit??'','type="number" min="0.001" step="any" placeholder="e.g. 500 for a 500g pack"')+
     '<div class="field"><label for="f_notes">Notes</label><textarea id="f_notes" name="notes" rows="2" maxlength="300" placeholder="Optional">'+escapeHTML(i?.notes||'')+'</textarea></div>'+
     '<p class="hint">Leave current level blank if not counted yet, and optimum blank until you choose a target.</p>'+formActions('Item',i?.id)+'</form>');
@@ -160,7 +162,7 @@ function stats(){
   return '<div class="stat-grid">'+stat(fmt(counted)+'<span class="small muted"> / '+fmt(state.items.length)+'</span>','Item types counted')+stat(fmt(below),'Below your optimum')+stat(fmt(exp),'Expiring or expired')+stat(fmt(calculateMeals(suggestions()).portions),'Automatic adult-size portions')+'</div>';
 }
 function overview(){
-  const m=calculateMeals(suggestions()),people=household().people,meals=setting('mealsPerDay',1),days=Math.floor(m.portions/household().equivalents)/meals,water=waterLitres(),waterDays=water/(people*setting('waterPerPerson',3));
+  const m=calculateMeals(suggestions()),people=household().people,meals=setting('mealsPerDay',1),days=Math.floor(Math.min(household().adults?m.adultPortions/household().adults:Infinity,household().kids?m.kidPortions/(household().kids*household().childPortion):Infinity))/meals,water=waterLitres(),waterDays=water/(people*setting('waterPerPerson',3));
   const below=state.items.filter(low).sort((a,b)=>a.name.localeCompare(b.name));
   return automaticMeals()+ '<section class="card hero"><div class="eyebrow">YOUR HOUSEHOLD DASHBOARD</div><h2>A little more prepared, every day.</h2><p class="small muted">Your supplies at a glance. Keep the essentials topped up, without overbuying.</p><div class="hero-actions"><button class="primary" data-tab="inventory">Browse stock →</button><a href="./pantry-view.html">Explore pantry →</a></div></section>'+stats()+
   '<section class="card"><div class="section-title"><h2>What might your supplies cover?</h2><button class="text-button" data-tab="meals">Meal details →</button></div>'+
@@ -198,11 +200,13 @@ function inventory(){
 }
 function automaticMeals(){
   const recipes=suggestions(),plan=calculateMeals(recipes),h=household(),perDay=setting('mealsPerDay',3);
-  const familyMeals=Math.floor(plan.portions/h.equivalents),days=familyMeals/perDay,waterDays=waterLitres()/(h.people*setting('waterPerPerson',3));
+  const adultMeals=h.adults?plan.adultPortions/h.adults:Infinity,kidMeals=h.kids?plan.kidPortions/(h.kids*h.childPortion):Infinity;
+  const familyMeals=Math.floor(Math.min(adultMeals,kidMeals)),days=familyMeals/perDay,waterDays=waterLitres()/(h.people*setting('waterPerPerson',3));
   const recognised=foodItems().filter(i=>ReservesPlanner.profile(i)),unknown=foodItems().filter(i=>amount(i)>0&&!ReservesPlanner.profile(i));
-  return '<section class="card hero"><div class="eyebrow">AUTOMATIC FAMILY PLAN</div><h2>How long could your reserves last?</h2><div class="stat-grid">'+stat(fmt(days),'Food days at your meal rate')+stat(fmt(waterDays),'Drinking / cooking water days')+stat(fmt(Math.min(days,waterDays)),'Days covered by both')+stat(fmt(familyMeals),'Complete family meals')+'</div><p class="hint">'+fmt(h.adults)+' adults + '+fmt(h.kids)+' children; each child gets '+fmt(h.childPortion*100)+'% of an adult portion. '+fmt(perDay)+' meals daily. <button class="text-button" data-tab="settings">Change household and portions →</button></p><p class="hint">This estimates meal coverage, not survival time or a complete diet. Cooking fuel, allergies and individual nutritional needs must also be checked. Stock with a past expiry date is excluded from automatic suggestions. Manual recipes are a separate alternative and are not added to these totals.</p></section>'+
-  '<section class="card"><h2>Suggested adult &amp; kids meals</h2><p class="hint">Recalculated automatically when you change stock. Ingredients are shared across suggestions, so nothing is counted twice. Quantities below make one meal for your whole household; allocated portions can be combined across batches.</p>'+
-  (recipes.length?recipes.map(r=>'<article class="meal"><h3>'+escapeHTML(r.name)+'</h3><p class="small">'+fmt(h.adults)+' adult portions + '+fmt(h.kids)+' child portions · '+fmt(plan.allocated[r.id]/h.equivalents)+' family batches in the shared plan</p><ul>'+r.ingredients.map(ing=>{const i=itemById(ing.itemId);return '<li>'+fmt(ing.amount*h.equivalents)+' '+escapeHTML(i.unit)+' '+escapeHTML(i.name)+'</li>';}).join('')+'</ul><p class="hint">Adults: one full portion each. Children: '+fmt(h.childPortion*100)+'% each. '+escapeHTML(r.note)+'</p></article>').join(''):'<p class="empty">Count food in Stock to get automatic suggestions. Try pasta + sauce, rice + beans, oats + milk, soup, noodles or ready-to-eat meals.</p>')+
+  return '<section class="card hero"><div class="eyebrow">AUTOMATIC FAMILY PLAN</div><h2>How long could your reserves last?</h2><div class="stat-grid">'+stat(fmt(days),'Food days at your meal rate')+stat(fmt(waterDays),'Drinking / cooking water days')+stat(fmt(Math.min(days,waterDays)),'Days covered by both')+stat(fmt(familyMeals),'Complete family meals')+(h.kids?stat(fmt(kidMeals/perDay),'Children’s accepted-food days'):'')+'</div><p class="hint">'+fmt(h.adults)+' adults + '+fmt(h.kids)+' children; each child gets '+fmt(h.childPortion*100)+'% of an adult portion. '+fmt(perDay)+' meals daily. <button class="text-button" data-tab="settings">Change household and portions →</button></p><p class="hint">This estimates meal coverage, not survival time or a complete diet. Cooking fuel, allergies and individual nutritional needs must also be checked. Stock with a past expiry date is excluded from automatic suggestions. Manual recipes are a separate alternative and are not added to these totals.</p></section>'+
+  '<section class="card"><h2>Meals for adults and fussy children</h2><p class="hint">In Stock, edit the familiar foods and tick “All children will eat this food”. Children’s suggestions use only those foods. Choose plain food, separate ingredients or familiar mixed meals in More. Recalculated automatically when you change stock. Ingredients are shared across suggestions, so nothing is counted twice. Quantities below serve either the adults or the children, as labelled; allocated portions can be combined across batches.</p>'+
+  (h.kids&&!foodItems().some(i=>i.kidAccepted&&amount(i)>0)?'<p class="message warning">No accepted children’s food is counted yet. Mark their familiar foods in Stock. Children’s coverage is zero until suitable stock is included.</p>':'')+
+  (recipes.length?recipes.map(r=>'<article class="meal"><div class="eyebrow">'+(r.audience==='kids'?'CHILDREN · ACCEPTED FOODS ONLY':'ADULTS')+'</div><h3>'+escapeHTML(r.name)+'</h3><p class="small">'+(r.audience==='kids'?fmt(h.kids)+' child portions':fmt(h.adults)+' adult portions')+' · '+fmt(plan.allocated[r.id]/(r.audience==='kids'?h.kids*h.childPortion:h.adults))+' household servings in the shared plan</p><ul>'+r.ingredients.map(ing=>{const i=itemById(ing.itemId);return '<li>'+fmt(ing.amount*(r.audience==='kids'?h.kids*h.childPortion:h.adults))+' '+escapeHTML(i.unit)+' '+escapeHTML(i.name)+'</li>';}).join('')+'</ul><p class="hint">Child portion size: '+fmt(h.childPortion*100)+'% each. '+escapeHTML(r.note)+'</p></article>').join(''):'<p class="empty">Count food in Stock to get automatic suggestions. Try pasta + sauce, rice + beans, oats + milk, soup, noodles or ready-to-eat meals.</p>')+
   (plan.capped?'<p class="message warning">Very large stock: calculation limit reached, totals may be understated.</p>':'')+
   '<details><summary>Ingredient and pack-size assumptions</summary><p class="hint">Dry pasta/rice: 75g per adult; beans: 200g; sauce: 150g; oats: 50g; milk: 200ml; soup: 400g. Pack sizes below are estimates unless you entered a size. Edit food grams per stock unit in Stock to match the label. Milk uses ml. Review suitability for each child; smaller portions are adjustable and are not age-specific dietary advice.</p>'+recognised.map(i=>{const p=ReservesPlanner.profile(i);return '<div class="row-line"><span>'+escapeHTML(i.name)+'</span><span>'+fmt(p.grams)+(p.kind==='milk'?'ml':'g')+' / '+escapeHTML(i.unit)+(p.assumed?' (assumed)':'')+'</span></div>';}).join('')+'</details>'+
   (unknown.length?'<p class="hint">Not included automatically (add a manual recipe): '+unknown.map(i=>escapeHTML(i.name)).join(', ')+'.</p>':'')+'</section>';
@@ -225,6 +229,7 @@ function settings(){
   return '<section class="card"><h2>Household planning assumptions</h2><form id="settingsForm"><div class="split">'+
     field('adults','Adults',household().adults,'required type="number" min="0" max="30" step="1"')+field('kids','Children',household().kids,'required type="number" min="0" max="30" step="1"')+field('childPortion','Child portion / adult portion',household().childPortion,'required type="number" min="0.1" max="1" step="0.05"')+
     field('mealsPerDay','Tracked meals per person / day',setting('mealsPerDay',1),'required type="number" min="1" max="6" step="1"')+'</div>'+
+    dropdown('kidPreparation','How will the children eat their food?',[['separate','Separate foods / sauce on the side'],['plain','Plain, single-food options only'],['mixed','Familiar mixed meals are OK']],state.settings.kidPreparation||'separate')+
     field('waterPerPerson','Water litres per person / day',setting('waterPerPerson',3),'required type="number" min="0.1" max="20" step="0.1"')+
     '<p class="hint">Select 1 tracked meal a day if you are only planning dinners, or 3 if you have included breakfast, lunch and dinner. The water estimate covers drinking and basic cooking only.</p><button class="primary" type="submit">Save assumptions</button></form></section>'+
     '<section class="card"><div class="section-title"><h2>My categories</h2><button data-action="newCategory">+ Category</button></div>'+state.categories.map(c=>'<div class="row-line"><div><strong>'+escapeHTML(c.name)+'</strong><div class="tiny muted">'+(c.type==='food'?'Food for recipes':c.type==='water'?'Water volumes':'General stock')+' · '+state.items.filter(i=>i.category===c.id).length+' item types</div></div><button class="text-button" data-action="editCategory" data-id="'+escapeHTML(c.id)+'">Edit</button></div>').join('')+'</section>'+
@@ -314,7 +319,7 @@ document.addEventListener('submit',e=>{
   if(form.id==='itemForm'){
     const name=String(data.get('name')||'').trim(),category=String(data.get('category')),unit=String(data.get('unit')||'').trim();
     if(!name||!unit||!cat(category)){alert('Please provide a name, unit and valid category.');return;}
-    const item={id:id||uid(),name,category,unit,current:numberOrNull(data.get('current')),optimum:numberOrNull(data.get('optimum')),location:String(data.get('location')||'').trim(),expiry:String(data.get('expiry')||''),litresPerUnit:numberOrNull(data.get('litresPerUnit')),gramsPerUnit:numberOrNull(data.get('gramsPerUnit')),notes:String(data.get('notes')||'').trim()};
+    const item={id:id||uid(),name,category,unit,current:numberOrNull(data.get('current')),optimum:numberOrNull(data.get('optimum')),location:String(data.get('location')||'').trim(),expiry:String(data.get('expiry')||''),litresPerUnit:numberOrNull(data.get('litresPerUnit')),gramsPerUnit:numberOrNull(data.get('gramsPerUnit')),kidAccepted:data.get('kidAccepted')==='on',notes:String(data.get('notes')||'').trim()};
     if(id){const at=state.items.findIndex(i=>i.id===id);if(at<0)return;state.items[at]=item;}else state.items.push(item);
   }else if(form.id==='categoryForm'){
     const name=String(data.get('name')||'').trim(),type=String(data.get('type'));
@@ -331,7 +336,7 @@ document.addEventListener('submit',e=>{
   }else if(form.id==='settingsForm'){
     const adults=Number(data.get('adults')),kids=Number(data.get('kids')),childPortion=Number(data.get('childPortion')),people=adults+kids,mealsPerDay=Number(data.get('mealsPerDay')),waterPerPerson=Number(data.get('waterPerPerson'));
     if(!Number.isInteger(adults)||adults<0||!Number.isInteger(kids)||kids<0||!(childPortion>=0.1&&childPortion<=1)||!Number.isInteger(people)||people<1||!Number.isInteger(mealsPerDay)||mealsPerDay<1||!(waterPerPerson>0)){alert('Enter valid household figures.');return;}
-    state.settings={people,adults,kids,childPortion,mealsPerDay,waterPerPerson};
+    state.settings={...state.settings,people,adults,kids,childPortion,mealsPerDay,waterPerPerson,kidPreparation:String(data.get('kidPreparation')||'separate')};
   }
   persist();if($('editor').open)closeDialog();
 });
