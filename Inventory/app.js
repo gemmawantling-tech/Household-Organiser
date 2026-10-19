@@ -43,6 +43,7 @@ function validData(d){
   return d;
 }
 try {state=validData(JSON.parse(localStorage.getItem(STORAGE_KEY)));}catch{state=newData();}
+let persistedState=JSON.parse(JSON.stringify(state));
 const cat = id => state.categories.find(c => c.id === id);
 const itemById = id => state.items.find(i => i.id === id);
 const listed = i => i.current !== null && i.current !== undefined && i.current !== '';
@@ -61,9 +62,8 @@ function daysToExpiry(i){
 const expiresSoon = i => daysToExpiry(i) !== null && daysToExpiry(i) <= 30;
 const waterLitres = () => state.items.filter(i=>cat(i.category)?.type==='water').reduce((sum,i)=>sum+amount(i)*Math.max(0,Number(i.litresPerUnit)||0),0);
 function persist(){
-  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));message='';}
-  catch{message='Could not save to browser storage. Please export a backup.';}
-  render();
+  try{const raw=localStorage.getItem(STORAGE_KEY),latest=raw?validData(JSON.parse(raw)):persistedState;state=HouseholdEvents.mergeChanges(latest,persistedState,state);localStorage.setItem(STORAGE_KEY,JSON.stringify(state));persistedState=JSON.parse(JSON.stringify(state));message='';render();return true;}
+  catch{message='Could not safely save to browser storage. Keep this tab open and export a backup.';render();return false;}
 }
 function notify(note){message=note;render();window.scrollTo({top:0,behavior:'smooth'});}
 function numberOrNull(value){
@@ -321,7 +321,7 @@ document.addEventListener('submit',e=>{
   if(form.id==='itemForm'){
     const name=String(data.get('name')||'').trim(),category=String(data.get('category')),unit=String(data.get('unit')||'').trim();
     if(!name||!unit||!cat(category)){alert('Please provide a name, unit and valid category.');return;}
-    const item={id:id||uid(),name,category,unit,current:numberOrNull(data.get('current')),optimum:numberOrNull(data.get('optimum')),location:String(data.get('location')||'').trim(),expiry:String(data.get('expiry')||''),litresPerUnit:numberOrNull(data.get('litresPerUnit')),gramsPerUnit:numberOrNull(data.get('gramsPerUnit')),kidPreference:String(data.get('kidPreference')||'auto'),notes:String(data.get('notes')||'').trim()};
+    const item={...(id?itemById(id):{}),id:id||uid(),name,category,unit,current:numberOrNull(data.get('current')),optimum:numberOrNull(data.get('optimum')),location:String(data.get('location')||'').trim(),expiry:String(data.get('expiry')||''),litresPerUnit:numberOrNull(data.get('litresPerUnit')),gramsPerUnit:numberOrNull(data.get('gramsPerUnit')),kidPreference:String(data.get('kidPreference')||'auto'),notes:String(data.get('notes')||'').trim()};
     if(id){const at=state.items.findIndex(i=>i.id===id);if(at<0)return;state.items[at]=item;}else state.items.push(item);
   }else if(form.id==='categoryForm'){
     const name=String(data.get('name')||'').trim(),type=String(data.get('type'));
@@ -333,15 +333,19 @@ document.addEventListener('submit',e=>{
     if(!name||!Number.isInteger(portions)||portions<1||!ingredients.length||ingredients.some(ing=>!ing.itemId||!Number.isFinite(ing.amount)||ing.amount<=0)){
       alert('Enter a meal name, portions and a positive amount for every ingredient.');return;
     }
-    const recipe={id:id||uid(),name,portions,ingredients};
+    const recipe={...(id?state.recipes.find(r=>r.id===id):{}),id:id||uid(),name,portions,ingredients};
     if(id){const at=state.recipes.findIndex(r=>r.id===id);if(at<0)return;state.recipes[at]=recipe;}else state.recipes.push(recipe);
   }else if(form.id==='settingsForm'){
     const adults=Number(data.get('adults')),kids=Number(data.get('kids')),childPortion=Number(data.get('childPortion')),people=adults+kids,mealsPerDay=Number(data.get('mealsPerDay')),waterPerPerson=Number(data.get('waterPerPerson'));
     if(!Number.isInteger(adults)||adults<0||!Number.isInteger(kids)||kids<0||!(childPortion>=0.1&&childPortion<=1)||!Number.isInteger(people)||people<1||!Number.isInteger(mealsPerDay)||mealsPerDay<1||!(waterPerPerson>0)){alert('Enter valid household figures.');return;}
     state.settings={...state.settings,people,adults,kids,childPortion,mealsPerDay,waterPerPerson,kidPreparation:String(data.get('kidPreparation')||'separate'),kidFoodMode:String(data.get('kidFoodMode')||'automatic')};
   }
-  persist();if($('editor').open)closeDialog();
+  if(persist()&&$('editor').open)closeDialog();
 });
 $('editor').addEventListener('click',e=>{if(e.target===$('editor'))closeDialog();});
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 render();
+
+// Reload changes from another inventory tab without discarding an open form.
+window.addEventListener('storage',event=>{if(event.key!==STORAGE_KEY||$('editor').open)return;try{state=validData(JSON.parse(event.newValue));persistedState=JSON.parse(JSON.stringify(state));render()}catch{notify('Inventory changed in another tab. Export before attempting recovery.')}});
+if(location.hash.startsWith('#item=')){try{const itemId=decodeURIComponent(location.hash.slice(6));activeTab='inventory';render();if(itemById(itemId))editItem(itemId);else notify('That stock item is no longer in this inventory.')}catch{notify('This stock link is invalid.')}}

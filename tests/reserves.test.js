@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import fs from 'node:fs';
 function app(data){
+ let saved=JSON.stringify(data);
  const node={innerHTML:'',addEventListener(){},setAttribute(){}};
- const c=vm.createContext({console,Date,Math,JSON,Number,String,Object,Array,Set,Intl,location:{hash:''},localStorage:{getItem:()=>JSON.stringify(data)},document:{getElementById:()=>node,querySelectorAll:()=>[],addEventListener(){}},navigator:{},window:{addEventListener(){}}});
+ const c=vm.createContext({console,Date,Math,JSON,Number,String,Object,Array,Set,Intl,location:{hash:''},localStorage:{getItem:()=>saved,setItem:(key,value)=>saved=value},document:{getElementById:()=>node,querySelectorAll:()=>[],addEventListener(){}},navigator:{},window:{addEventListener(){}}});
+ vm.runInContext(fs.readFileSync('events.js','utf8'),c);
  vm.runInContext(fs.readFileSync('Inventory/recipe-library.js','utf8'),c);
  vm.runInContext(fs.readFileSync('Inventory/planner.js','utf8'),c);vm.runInContext(fs.readFileSync('Inventory/app.js','utf8'),c);return code=>vm.runInContext(code,c);
 }
@@ -130,4 +132,10 @@ test('baked beans, chickpeas and coconut milk cannot substitute for plain beans 
 test('different library recipes never collide in allocation IDs',()=>{
  const run=app(data([item('p','Pasta',300),item('s','Tomato sauce',600)]));
  const ids=run('suggestions().map(r=>r.id)');assert.equal(new Set(ids).size,ids.length);
+});
+
+test('an inventory edit preserves another tab’s different stock change and unknown fields',()=>{
+ const run=app(data([{...item('p','Pasta',300),unknown:'keep'},item('r','Rice',500)]));
+ run('(()=>{const other=JSON.parse(localStorage.getItem(STORAGE_KEY));other.items.find(i=>i.id==="r").current=900;localStorage.setItem(STORAGE_KEY,JSON.stringify(other));state.items.find(i=>i.id==="p").optimum=600;persist()})()');
+ assert.equal(run('itemById("r").current'),900);assert.equal(run('itemById("p").optimum'),600);assert.equal(run('itemById("p").unknown'),'keep');
 });
