@@ -70,9 +70,9 @@ it is not Firebase-synchronised. No sample stock quantities are inserted.
 - Unit suite: 57 tests, including dates/recurrence, carry-over, invitation joining,
   deployment safeguards, recipe allocation, conflict merging, outbox restart,
   quota/permission failures and worker cache isolation.
-- Firestore/Storage emulators: 11 tests against `demo-household-organiser` only.
+- Firestore/Storage emulators: 12 tests against `demo-household-organiser` only.
   Verified members, wrong/rotated invitations, forged roles, cross-household reads,
-  protected attachment paths/types/sizes and owner rotation are covered.
+  protected attachment paths/types/sizes owner rotation and two-client transaction merging are covered.
 - Browser integration: mobile event editing/assignment/recurrence/attachments,
   carry-over/owner colours, offline queued edits with a concurrent event, calendar
   navigation, audit, warm-worker offline reopening at 320px, and Reserves deep
