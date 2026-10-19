@@ -26,6 +26,7 @@ test('mobile event and dated carry-over flows preserve shared tasks and attachme
   const browser=await chromium.launch({...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{}),args:['--no-sandbox']});
   try{
     const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block',acceptDownloads:true});
+    await context.addInitScript(value=>{if(!localStorage.getItem('household-organiser-v2'))localStorage.setItem('household-organiser-v2',JSON.stringify({...value,completed:{...value.completed,legacyOfflineEdit:true}}))},seed);
     const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.route('**/*',async route=>{
       const url=route.request().url();
@@ -36,6 +37,7 @@ test('mobile event and dated carry-over flows preserve shared tasks and attachme
     });
     await page.goto(`http://127.0.0.1:${server.address().port}`);
     await page.locator('#householdApp').waitFor({state:'visible',timeout:5000}).catch(async error=>{throw Error(JSON.stringify({errors,message:await page.locator('#authMessage').textContent()})+' '+error.message)});
+    assert.equal(await page.evaluate(()=>Object.keys(localStorage).some(key=>key.startsWith('household-recovery:shared:gemma:')&&JSON.parse(localStorage.getItem(key)).completed.legacyOfflineEdit===true)),true);
     await page.locator('#dateControls summary').click();await page.locator('#datePicker').fill('2026-10-18');await page.locator('#datePicker').dispatchEvent('change');
     await page.locator('#events').getByRole('button',{name:'Legacy booking',exact:true}).click();
     assert.equal(await page.locator('#editNote').inputValue(),'Original notes');

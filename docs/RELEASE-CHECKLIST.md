@@ -27,8 +27,7 @@
    tick a known task, and confirm the offline/pending indicator. Reconnect and
    confirm saved/shared on both phones. If this browser cannot persist Firestore's
    cache, More displays that limitation; keep the tab open until it syncs.
-6. With an older app version already open, release the new version and check the
-   update banner. Update only when edits are saved and the pending count is zero.
+6. After this UX version has been loaded once, keep it open for a subsequent release and check the update banner. The pre-UX version has no update banner and may need one normal online refresh for this first upgrade. Update only when edits are saved and the pending count is zero.
    Check portrait/landscape, large text and one-handed use on the actual phone.
 7. Record the deployed commit, time, public-file check and device results. Until
    these checks complete, describe the code as reviewed/tested, not device-verified.

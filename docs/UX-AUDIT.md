@@ -42,7 +42,7 @@ the account/device checks in RELEASE-CHECKLIST.md before marking them deployed.
 | Offline | Worker omitted Firebase SDK scripts and several shell resources | Cache the public app shell and versioned SDK modules only, Firestore IndexedDB persistence, explicit limitations if unavailable |
 | Updates | Forced worker activation, unreliable refresh semantics | Waiting worker/update banner; refuse update while a dialog or pending edits need attention; network timeout and cached shell fallback |
 | Worker scope | Root controls can reach other apps on the same origin | Root cache allowlist excludes Family and Inventory pages and all private Firestore/Storage requests |
-| Recovery | Import could replace the shared state without a saved prior snapshot | Explicit household-wide confirmation, shape/size validation and scoped pre-import snapshot downloads |
+| Recovery | Import could replace the shared state without a saved prior snapshot | Explicit household-wide confirmation, shape/size validation, scoped pre-import snapshots and retention of a differing legacy device cache before first upgrade |
 | Earlier Family app | Non-atomic create/join incompatible with deployed rules; aggregate organiser appeared as a blank task | Reuse shared atomic invitation helpers; exclude organiser aggregate from its collection view; keep legacy records separate and link clearly to root |
 | Home Reserves | Weak meal combinations, plain staples counted as meals | Retained pending recipe correction and source links; fuller combinations use counted ingredients |
 | Pantry view | Tapping an item opened only the stock tab | Item-specific deep link opens the correct edit dialog |

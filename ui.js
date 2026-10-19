@@ -65,6 +65,7 @@
   tools.innerHTML =
     '<button id="openAudit">Monthly preparedness audit</button><button id="checkUpdates">Check for app updates</button><a href="./Inventory/">Home Reserves</a><a href="./Family/">Earlier Family view</a>';
   more.append(tools, $("backupCard"));
+  const legacyNotice=el("p","settings-note","A snapshot from the previous app was kept in Backups below. Review it if any earlier device-only edits are missing.");legacyNotice.id="legacyRecoveryNotice";legacyNotice.hidden=true;$("backupCard").prepend(legacyNotice);
   const recoveries = el("details");
   recoveries.id = "recoveryDownloads";
   $("backupCard").append(recoveries);

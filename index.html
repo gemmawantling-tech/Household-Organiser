@@ -129,6 +129,7 @@ async function activate(hid,owner){
  }else remote=snap.data().data;
  if(!remote||typeof remote!=='object')throw Error('Shared data could not be read. No data was changed.');
  const uid=auth.currentUser.uid;window.householdScope=hid+':'+uid;
+ const oldCache=localStorage.getItem(STORE);if(oldCache&&!localStorage.getItem(STORE+'-scope')&&oldCache!==JSON.stringify(cleanState(remote))){localStorage.setItem('household-recovery:'+window.householdScope+':'+Date.now(),oldCache);document.getElementById('legacyRecoveryNotice').hidden=false;}
  const makeOutbox=()=>HouseholdOutbox.create({storage:localStorage,key:'household-outbox-v1:'+hid+':'+uid,merge:HouseholdEvents.mergeChanges,online:()=>navigator.onLine!==false,lock:fn=>navigator.locks?navigator.locks.request('household-sync:'+hid+':'+uid,fn):fn(),onState:data=>{if(activeHouse===hid)receive(data)},onStatus:(...args)=>{if(activeHouse===hid)syncStatus(...args)},write:async op=>{
    if(activeHouse!==hid||auth.currentUser?.uid!==uid)throw Error('Household session changed.');
    return runTransaction(db,async tx=>{const snapshot=await tx.get(target);if(!snapshot.exists())throw Error('Shared organiser unavailable');const data=HouseholdEvents.mergeChanges(snapshot.data().data,op.before,op.after);tx.update(target,{data,updatedAt:serverTimestamp()});return data});
