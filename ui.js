@@ -112,6 +112,7 @@
   const viewPanels = { today, calendar, lists, more, audit };
   function show(name) {
     view = name;
+    if (name === "today") selected = parseISO(iso(new Date()));
     monthly = name === "audit";
     if (monthly) {
       audit.append($("routinesProgress"), $("sections"));
@@ -256,6 +257,14 @@
     goto(HouseholdCalendar.shift(date(), calendarView, 1));
   $("calendarToday").onclick = () => goto(iso(new Date()));
   function refresh() {
+    $("focusCard").querySelector("h2").textContent =
+      date() === iso(new Date())
+        ? "Today’s outstanding jobs"
+        : "Jobs for " +
+          selected.toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+          });
     recoveries.replaceChildren();
     recoveries.append(el("summary", "", "Download earlier device snapshots"));
     try {

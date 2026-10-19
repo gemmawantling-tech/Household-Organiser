@@ -73,7 +73,7 @@ test('mobile event and dated carry-over flows preserve shared tasks and attachme
     await page.getByText('✓ Saved and shared',{exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>mockData.events.some(e=>e.id==='remote')),true);
     assert.deepEqual(await page.evaluate(()=>mockData.custom),seed.custom);
-    await page.locator('nav [data-view=today]').click();await page.locator('#events').getByRole('button',{name:'Anniversary',exact:true}).click();
+    await page.locator('nav [data-view=today]').click();await page.locator('#dateControls').evaluate(el=>el.open=true);await page.locator('#datePicker').fill('2026-11-18');await page.locator('#datePicker').dispatchEvent('change');await page.locator('#events').getByRole('button',{name:'Anniversary',exact:true}).click();
     page.once('dialog',dialog=>dialog.accept());await page.locator('#deleteEvent').click();await page.locator('#modal').waitFor({state:'hidden'});
     assert.equal(await page.evaluate(()=>mockData.events.some(e=>e.title==='Anniversary')),false);
     assert.equal(await page.evaluate(()=>mockData.events.some(e=>e.id==='remote')),true);
