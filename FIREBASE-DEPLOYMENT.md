@@ -35,7 +35,7 @@ rerun verify; do not add broad roles to work around it.
 - Service account: `github-firebase-rules@home-organised.iam.gserviceaccount.com`.
 - Project role: **Firebase Rules Admin**, without a Firestore document data role.
 - Account impersonation binding: **Workload Identity User** for subject
-  `repo:gemmawantling-tech/Household-Organiser:ref:refs/heads/main` in that pool.
+  `repo:gemmawantling-tech@344082632/Household-Organiser@1423673602:ref:refs/heads/main` in that pool.
 - No JSON private keys, Firebase CLI login token, GitHub secret, or downloaded
   credential file is needed. GitHub requests a ten-minute Google access token.
 
