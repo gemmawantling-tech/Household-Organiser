@@ -15,3 +15,17 @@ Data stays browser-local under the existing storage key. Export JSON backups reg
 Run `npm test` from the repository root for calculation and existing application checks.
 
 Combination examples: a 250g microwave rice pouch plus a 250g bean sachet supports two adult portions at 125g of each ingredient per portion. Soup with tortilla crisps uses 400g soup plus 30g crisps per adult. Unspecified bean pouch/sachet size assumes 250g and tortilla crisp bags assume 180g; label weights override these assumptions. Cards display adult portions or child portions as alternatives, never as additive stock. Standalone soup and soup-with-crisps suggestions share the same soup allocation.
+
+## Broader recipe ideas
+
+The bundled 28-idea library matches counted, unexpired ingredients automatically, including three-ingredient combinations. It includes tuna/sweetcorn pasta, tuna/tomato pasta, pesto pasta, bean/tomato rice, pepper/bean pots, lentil/tomato soups, peanut noodles, cheese/bean wraps, soup with bread and simple breakfasts. It recognises tuna, sweetcorn, peas, roasted peppers, peanut butter, soy sauce, pesto, cheese, wraps and bread as well as the original staples. Unspecified sizes remain estimates; enter usable/drained weights from labels for better quantities. Known spicy stock is excluded from children’s suggestions.
+
+Recipes are original simplified pantry adaptations, researched from online recipe ideas. Card links identify inspiration; methods and portions use app assumptions rather than reproducing the publishers’ recipes. Matching runs offline against this library; it is not live web search or an AI service. The app cannot access another device’s browser inventory. One-missing-ingredient ideas appear separately and do not contribute to coverage.
+
+Sources reviewed:
+- https://www.bbcgoodfood.com/recipes/storecupboard-pasta-salad
+- https://www.bbcgoodfood.com/recipes/tomato-pepper-bean-one-pot
+- https://www.bbcgoodfood.com/recipes/red-lentil-chickpea-chilli-soup
+- https://www.bbcgoodfood.com/recipes/satay-noodle-soup
+- https://www.bbcgoodfoodme.com/recipes/refried-bean-quesadillas/
+- https://www.bbcgoodfoodme.com/recipes/spicy-chilli-bean-soup/

@@ -5,6 +5,7 @@ import fs from 'node:fs';
 function app(data){
  const node={innerHTML:'',addEventListener(){},setAttribute(){}};
  const c=vm.createContext({console,Date,Math,JSON,Number,String,Object,Array,Set,Intl,location:{hash:''},localStorage:{getItem:()=>JSON.stringify(data)},document:{getElementById:()=>node,querySelectorAll:()=>[],addEventListener(){}},navigator:{},window:{addEventListener(){}}});
+ vm.runInContext(fs.readFileSync('Inventory/recipe-library.js','utf8'),c);
  vm.runInContext(fs.readFileSync('Inventory/planner.js','utf8'),c);vm.runInContext(fs.readFileSync('Inventory/app.js','utf8'),c);return code=>vm.runInContext(code,c);
 }
 const item=(id,name,current,unit='g')=>({id,name,current,unit,category:'food'});
@@ -90,4 +91,34 @@ test('recipe combinations follow explicit pack weights and require every ingredi
  assert.equal(run('calculateMeals(suggestions()).individually["auto:r:b:adult"]'),0);
  run('state.items=state.items.filter(i=>i.id!=="b")');
  assert.equal(run('suggestions().some(r=>r.name==="Rice and beans")'),false);
+});
+test('expanded recipes combine three ingredients and include online inspiration',()=>{
+ const run=app(data([item('p','Pasta',300),item('t','Tuna',320),item('c','Sweetcorn',240)]));
+ assert.ok(run('suggestions().some(r=>r.name==="Tuna and sweetcorn pasta")'));
+ assert.equal(run('calculateMeals(suggestions()).individually["auto:p:t:c:adult"]'),4);
+ assert.match(run('automaticMeals()'),/Original recipe inspiration/);
+ assert.match(run('automaticMeals()'),/bbcgoodfood.com\/recipes\/storecupboard-pasta-salad/);
+});
+test('missing ingredients produce separate ideas without counted recipes',()=>{
+ const run=app(data([item('p','Pasta',300),item('t','Tuna',320)]));
+ assert.equal(run('suggestions().some(r=>r.name==="Tuna and sweetcorn pasta")'),false);
+ assert.ok(run('ReservesPlanner.nearly(foodItems()).some(r=>r.name==="Tuna and sweetcorn pasta"&&r.missing.includes("corn"))'));
+ assert.match(run('automaticMeals()'),/More ideas with one extra ingredient/);
+});
+test('peanut noodles and bean cheese wraps need all stock and retain child notes',()=>{
+ const run=app(data([item('n','Noodles',340),item('p','Peanut butter',100),item('b','Beans',500),item('c','Cheddar',120),item('w','Tortilla wraps',4,'each')]));
+ assert.equal(run('calculateMeals(suggestions()).individually["auto:b:c:w:adult"]'),4);
+ assert.ok(run('suggestions().find(r=>r.audience==="kids"&&r.name.startsWith("Peanut butter noodles")).note.includes("Contains peanuts")'));
+ assert.equal(run('ReservesPlanner.profile(itemById("w")).grams'),60);
+});
+test('spicy packets do not become plain children suggestions or alter adult choices',()=>{
+ const run=app(data([item('r','Spicy microwave rice',2,'pouch'),item('b','Chilli kidney beans',2,'sachet')]));
+ assert.equal(run('suggestions().some(r=>r.audience==="kids")'),false);
+ assert.ok(run('suggestions().some(r=>r.audience==="adult")'));
+});
+test('online-inspired options conserve shared stock across duplicate packs',()=>{
+ const run=app(data([item('p','Pasta',300),item('t','Tuna',320),item('t2','Tuna',160),item('c','Sweetcorn',240),item('s','Passata',600)]));
+ const used=run('(()=>{const recipes=suggestions(),plan=calculateMeals(recipes);return recipes.reduce((sum,r)=>sum+r.ingredients.filter(i=>i.itemId==="p").reduce((s,i)=>s+i.amount*plan.allocated[r.id],0),0)})()');
+ assert.ok(used<=300+1e-9);
+ assert.equal(run('itemById("p").current'),300);
 });
