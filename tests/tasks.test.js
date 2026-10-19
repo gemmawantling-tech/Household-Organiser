@@ -1,0 +1,15 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFileSync} from 'node:fs';
+const ctx=vm.createContext({Date});vm.runInContext(readFileSync('tasks.js','utf8'),ctx);
+const sections=['Morning Reset',"Today's Jobs",'Evening Reset'];
+const task={id:'custom:one',text:'Book dentist',owner:'Ben'};
+const original="2026-10-18|Today's Jobs|custom:one";
+const state=()=>({custom:{"2026-10-18|Today's Jobs":[task]},completed:{},removed:{},owners:{[original]:'Gemma'},events:[{id:'event',date:'2026-10-18',title:'Party'}]});
+const overdue=(s,day='2026-10-19',today=day)=>ctx.HouseholdTasks.overdue(s,day,today,sections);
+test('missed dates carry once without copying, changing ownership or touching calendar',()=>{const s=state(),before=JSON.stringify(s),found=overdue(s,'2026-11-03');assert.equal(found.length,1);assert.equal(found[0].item.id,task.id);assert.equal(found[0].item.sourceDate,'2026-10-18');assert.equal(JSON.stringify(s),before);});
+test('a tick on the original key completes the carried task on every later day; undo restores it',()=>{const s=state();s.completed[original]=true;assert.equal(overdue(s).length,0);s.completed[original]=false;assert.equal(overdue(s).length,1);s.removed[original]=true;assert.equal(overdue(s).length,0);});
+test('today, future dates, recurring routines and audits are not duplicated into backlog',()=>{const s=state();s.custom["2026-10-19|Today's Jobs"]=[{id:'now'}];s.custom["2026-10-20|Today's Jobs"]=[{id:'future'}];s.custom["Monday|Today's Jobs"]=[{id:'weekly'}];s.custom['Monthly|Monthly Audit']=[{id:'monthly'}];assert.equal(overdue(s).length,1);assert.equal(overdue(s,'2026-10-20','2026-10-19').length,0);assert.equal(overdue(s,'2026-10-18','2026-10-19').length,0);});
+test('all three sections work and old shared records without custom prefixes are retained',()=>{const s=state();s.custom['2026-10-17|Morning Reset']=[{id:'legacy',text:'Keep'}];s.custom['2026-10-16|Evening Reset']=[{id:'night'}];assert.deepEqual(Array.from(overdue(s),x=>x.item.id),['night','legacy',task.id]);});
+test('malformed imported dates and unrelated data cannot become tasks',()=>{const s=state();s.custom['2026-02-30|Morning Reset']=[{id:'bad'}];s.custom['2026-10-10|Unknown']=[{id:'other'}];s.custom['2026-10-10|Morning Reset']=null;assert.equal(overdue(s).length,1);});
