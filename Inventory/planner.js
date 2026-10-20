@@ -4,7 +4,7 @@ const types=[['bakedBeans',/baked beans/i,400,200],['chickpeas',/chickpeas|garba
 function profile(i){
  const t=types.find(t=>t[1].test(i.name||''));if(!t)return null;
  const [kind,,pack,serving]=t,u=String(i.unit||'').toLowerCase().trim(),size=u.match(/^(\d+(?:\.\d+)?)\s*(kg|g|ml|l)\b/);
- let grams=Number(i.gramsPerUnit)>0?Number(i.gramsPerUnit):u==='g'||u==='ml'?1:u==='kg'||u==='litre'?1000:size?Number(size[1])*(/^(kg|l)$/.test(size[2])?1000:1):null;
+ let grams=Number(i.gramsPerUnit)>0?Number(i.gramsPerUnit):['g','grams','ml','millilitres'].includes(u)?1:['kg','kilograms','litre','litres'].includes(u)?1000:size?Number(size[1])*(/^(kg|l)$/.test(size[2])?1000:1):null;
  const assumed=grams===null,microwave=kind==='rice'&&(/microwave|ready.to.eat|cooked/i.test(i.name)||/pouch|sachet/i.test(u));
  const beanPouch=['beans','chickpeas','bakedBeans'].includes(kind)&&/pouch|sachet/i.test(u+' '+i.name);
  const cookedPulse=['beans','chickpeas','lentils'].includes(kind)&&/tin|can|pouch|sachet|cooked|ready.to.eat/i.test(u+' '+i.name);
@@ -62,4 +62,54 @@ function nearly(items){
  return (root.ReservesRecipeLibrary||[]).map(r=>({...r,missing:r.kinds.filter(k=>!kinds.has(k))})).filter(r=>r.missing.length===1&&r.kinds.length-r.missing.length>=2).slice(0,6);
 }
 root.ReservesPlanner={profile,household,suggest,preparation,nearly};
+})(globalThis);
+
+/* Explicit record calculations. Unknown values never become confirmed supplies. */
+(function(root){
+ const positive=v=>Number.isFinite(Number(v))?Math.max(0,Number(v)):0;
+ function litres(i){
+  const unit=String(i.unit||'').toLowerCase().trim();
+  const size=positive(i.litresPerUnit)||({litre:1,litres:1,l:1,ml:0.001,millilitres:0.001,'500ml bottle':0.5,'2l bottle':2,'5l bottle':5,'5l container':5}[unit]||0);
+  return positive(i.current)*size*(positive(i.unitsPerPack)||1);
+ }
+ function water(items,s){
+  const people=root.ReservesPlanner.household(s).people,extra=positive(s.petWater)+positive(s.specialWater);
+  const potable=items.filter(i=>i.potable==='yes').reduce((n,i)=>n+litres(i),0);
+  const nonPotable=items.filter(i=>i.potable==='no').reduce((n,i)=>n+litres(i),0);
+  const unverified=items.filter(i=>!['yes','no'].includes(i.potable)).reduce((n,i)=>n+litres(i),0);
+  const daily=people*(positive(s.waterPerPerson)||3)+extra,basic=people*10+extra,target=positive(s.targetDays)||21;
+  return {potable,nonPotable,unverified,daily,basic,days:daily?potable/daily:0,basicDays:basic?potable/basic:0,shortfall:Math.max(0,daily*target-potable)};
+ }
+ function portions(i){return positive(i.current)*positive(i.portionsPerPack);}
+ function usable(i,today=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)){
+  return positive(i.current)>0&&!(i.expiry&&i.expiry<today&&(i.dateType!=='bestbefore'||i.reviewedBestBefore!=='yes'));
+ }
+ function allocate(items,recipes,s,mode='normal'){
+  const h=root.ReservesPlanner.household(s),remaining=Object.fromEntries(items.map(i=>[i.id,usable(i)?positive(i.current):0])),byId=Object.fromEntries(items.map(i=>[i.id,i]));
+  const diet=s.diet||'any',slots={breakfast:0,lunch:0,dinner:0},used={},allocations=[];
+  const diets=[diet,s.adultDiet||'',h.kids?s.childDiet||'':''].join(',').split(',').map(v=>v.trim().toLowerCase()).filter(v=>v&&v!=='any');
+  const suitable=i=>{const tags=(i.diet||'').split(',').map(v=>v.trim().toLowerCase());return diets.every(d=>tags.includes(d)||(d==='vegetarian'&&tags.includes('vegan')))&&(!h.kids||i.kidPreference!=='no')};
+  const candidates=recipes.filter(r=>Object.hasOwn(slots,r.mealSlot)&&['ready','heat','cook'].includes(r.preparation)&&r.ingredients?.length&&r.ingredients.every(g=>byId[g.itemId]&&suitable(byId[g.itemId]))&&r.portions>0&&r.ingredients.every(g=>Number(g.amount)>0)&& (mode==='normal'||r.preparation==='ready'||(mode==='heat'&&r.preparation==='heat'))&&(mode==='normal'||r.ingredients.every(g=>(byId[g.itemId].preparation==='ready'||(mode==='heat'&&byId[g.itemId].preparation==='heat'))&&byId[g.itemId].requiresWater==='no')));
+  for(const i of items)if(i.portionType==='meal'&&Object.hasOwn(slots,i.mealSlot)&&positive(i.portionsPerPack)&&suitable(i)&&['ready','heat','cook'].includes(i.preparation)&&(mode==='normal'||((i.preparation==='ready'||(mode==='heat'&&i.preparation==='heat'))&&i.requiresWater==='no')))candidates.push({id:'pack:'+i.id,name:i.name,portions:positive(i.portionsPerPack),mealSlot:i.mealSlot,ingredients:[{itemId:i.id,amount:1}]});
+  // Allocate to the least covered meal slot, from one shared pool. Conservative,
+  // deterministic greedy allocation, not a claim of optimal or nutritional coverage.
+  for(let pass=0;pass<10000;pass++){
+   const feasible=candidates.map(r=>({...r,req:r.ingredients.reduce((a,g)=>(a[g.itemId]=(a[g.itemId]||0)+Number(g.amount),a),{})})).filter(r=>Object.entries(r.req).every(([id,q])=>remaining[id]>=q));
+   feasible.sort((a,b)=>(slots[a.mealSlot]??Infinity)-(slots[b.mealSlot]??Infinity));
+   const r=feasible[0];if(!r)break;if(!(r.mealSlot in slots))continue;
+   for(const [id,q] of Object.entries(r.req)){remaining[id]-=q;used[id]=(used[id]||0)+q;}
+   slots[r.mealSlot]+=Number(r.portions);allocations.push({id:r.id,name:r.name,slot:r.mealSlot,portions:Number(r.portions)});
+  }
+  const daily=positive(s.mealsPerDay)||3,eq=h.equivalents;
+  // Every tracked slot must be covered: surplus dinners cannot fill breakfast.
+  const tracked=['breakfast','lunch','dinner'].slice(-Math.min(3,daily));
+  const days=eq?Math.min(...tracked.map(k=>slots[k]/eq)):0;
+  return {slots,days,used,remaining,allocations,capped:allocations.length===10000,portions:Object.values(slots).reduce((a,b)=>a+b,0)};
+ }
+ function simulate(result,s,days){
+ const pool=result.allocations.map(a=>({...a})),h=root.ReservesPlanner.household(s),slots=['breakfast','lunch','dinner'].slice(-Math.min(3,positive(s.mealsPerDay)||3));
+ return Array.from({length:days},(_,index)=>({day:index+1,meals:slots.map(slot=>{let need=h.equivalents;const dishes=[];for(const batch of pool){if(batch.slot!==slot||batch.portions<=0)continue;const take=Math.min(need,batch.portions);if(take<=0)break;batch.portions-=take;need-=take;dishes.push({name:batch.name,portions:take});}return {slot,dishes,shortfall:need};})}));
+ }
+ function adjust(i,delta){return {...i,current:Math.max(0,Math.round((positive(i.current)+delta)*1000)/1000)};}
+ root.ReservesCoverage={litres,water,portions,usable,allocate,simulate,adjust};
 })(globalThis);
