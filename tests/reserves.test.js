@@ -49,7 +49,7 @@ test('adult supplies cannot imply coverage for children with no accepted foods',
  const d=data([item('s','Soup',4000)]);d.settings.kidFoodMode='confirmed';const run=app(d);
  assert.equal(run('calculateMeals(suggestions()).kidPortions'),0);
  assert.match(run('automaticMeals()'),/No children’s meal ideas match/);
- assert.match(run('automaticMeals()'),/class="value">0<\/div><div class="label">Food days/);
+ assert.equal(run('coverage().days'),0);
 });
 
 test('inventory alone produces children and adult meals with quantities and preparation',()=>{

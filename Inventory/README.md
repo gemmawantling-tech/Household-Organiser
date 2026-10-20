@@ -1,5 +1,10 @@
 # Home Reserves
 
+The mobile navigation, portions, conservative food coverage, water scenarios,
+stock rotation and release procedure are documented in
+[Reserves upgrade notes](../docs/RESERVES-UPGRADE.md). Existing browser-local
+records remain in place; this app does not use the organiser’s Firebase accounts.
+
 Count food in Stock and open Meals. Suggestions match the inventory on this
 browser; no inventory data is sent to a recipe website or AI service. Existing
 stock, household settings, saved manual recipes and the storage key are preserved.
