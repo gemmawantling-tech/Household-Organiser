@@ -8,7 +8,7 @@ test('Android-sized stock entry, portions, water, undo, bulk editing and storage
  const allowed=['events.js','Inventory/index.html','Inventory/app.css','Inventory/app.js','Inventory/planner.js','Inventory/recipe-library.js'];
  const server=createServer(async(req,res)=>{try{const file=new URL(req.url,'http://localhost').pathname.slice(1);if(!allowed.includes(file)){res.writeHead(404).end();return;}res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/html');res.end(await readFile(file));}catch{res.writeHead(500).end();}});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
- const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
+ const browser=await chromium.launch({...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{}),args:['--no-sandbox']});
  try{
  const context=await browser.newContext({...devices['Pixel 7'],serviceWorkers:'block'}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await context.addInitScript(d=>{if(!localStorage.getItem('home_reserves_inventory_v1'))localStorage.setItem('home_reserves_inventory_v1',JSON.stringify(d));},seed);
