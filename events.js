@@ -42,7 +42,7 @@
     if (attachment && index < 0) throw Error('This event was removed. Reopen the calendar.');
     const current = index < 0 ? {id:eventId} : result[index];
     const next = {...current, ...patch, id:eventId};
-    if (attachment) next.attachments = [...(current.attachments || []), attachment];
+    if (attachment) next.attachments = [...(current.attachments || []).filter(item=>item.objectId!==attachment.objectId), attachment];
     if (index < 0) result.push(next); else result[index] = next;
     return result;
   }

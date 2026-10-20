@@ -1,16 +1,17 @@
 /* Stock quantities are converted to adult-equivalent portions. */
 (function(root){
-const types=[['tuna',/\btuna\b/i,145,80],['corn',/sweetcorn|sweet corn/i,340,60],['peas',/\bpeas\b/i,400,80],['pepper',/roasted peppers|bell peppers|red peppers/i,450,75],['peanut',/peanut butter/i,340,25],['soy',/soy sauce/i,150,10],['pesto',/pesto/i,190,25],['cheese',/cheddar|\bcheese\b/i,400,30],['wrap',/tortilla wraps?|flour tortillas?|\bwraps?\b/i,360,60],['bread',/\bbread\b|\btoast\b/i,800,80],['pasta',/\bpasta\b(?!\s*sauce)|spaghetti/i,500,75],['rice',/\brice\b/i,500,75],['sauce',/pasta sauce|passata|chopped tomatoes/i,400,150],['beans',/\bbeans\b|chickpeas/i,400,200],['lentils',/lentils/i,500,75],['oats',/\boats\b|porridge/i,500,50],['milk',/\bmilk\b/i,1000,200],['crisps',/tortilla (?:chips|crisps)|nachos|corn chips/i,180,30],['soup',/\bsoup\b/i,400,400],['noodles',/noodles/i,85,85],['ready',/ready.to.eat|meal sachet/i,300,300]];
+const types=[['bakedBeans',/baked beans/i,400,200],['chickpeas',/chickpeas|garbanzo/i,400,150],['tuna',/\btuna\b/i,145,80],['corn',/sweetcorn|sweet corn/i,340,60],['peas',/\bpeas\b/i,400,80],['pepper',/roasted peppers|bell peppers|red peppers/i,450,75],['peanut',/peanut butter/i,340,25],['soy',/soy sauce/i,150,10],['pesto',/pesto/i,190,25],['cheese',/cheddar|\bcheese\b/i,400,30],['wrap',/tortilla wraps?|flour tortillas?|\bwraps?\b/i,360,60],['bread',/\bbread\b|\btoast\b/i,800,80],['pasta',/\bpasta\b(?!\s*sauce)|spaghetti/i,500,75],['rice',/\brice\b/i,500,75],['sauce',/pasta sauce|tomato sauce|passata|chopped tomatoes/i,400,150],['beans',/\bbeans\b/i,400,200],['lentils',/lentils/i,500,75],['oats',/\boats\b|porridge/i,500,50],['milk',/^(?!.*coconut).*\bmilk\b/i,1000,200],['crisps',/tortilla (?:chips|crisps)|nachos|corn chips/i,180,30],['soup',/\bsoup\b/i,400,400],['noodles',/noodles/i,85,85],['ready',/ready.to.eat|meal sachet/i,300,300]];
 function profile(i){
  const t=types.find(t=>t[1].test(i.name||''));if(!t)return null;
  const [kind,,pack,serving]=t,u=String(i.unit||'').toLowerCase().trim(),size=u.match(/^(\d+(?:\.\d+)?)\s*(kg|g|ml|l)\b/);
  let grams=Number(i.gramsPerUnit)>0?Number(i.gramsPerUnit):u==='g'||u==='ml'?1:u==='kg'||u==='litre'?1000:size?Number(size[1])*(/^(kg|l)$/.test(size[2])?1000:1):null;
  const assumed=grams===null,microwave=kind==='rice'&&(/microwave|ready.to.eat|cooked/i.test(i.name)||/pouch|sachet/i.test(u));
- const beanPouch=kind==='beans'&&/pouch|sachet/i.test(u+' '+i.name);
- const cookedPulse=['beans','lentils'].includes(kind)&&/tin|can|pouch|sachet|cooked|ready.to.eat/i.test(u+' '+i.name);
+ const beanPouch=['beans','chickpeas','bakedBeans'].includes(kind)&&/pouch|sachet/i.test(u+' '+i.name);
+ const cookedPulse=['beans','chickpeas','lentils'].includes(kind)&&/tin|can|pouch|sachet|cooked|ready.to.eat/i.test(u+' '+i.name);
  if(grams===null&&kind==='bread'&&u==='slice')grams=40;
  if(grams===null&&kind==='wrap'&&/^(each|item|unit|wrap)$/.test(u))grams=60;
- return {kind,grams:grams??(microwave||beanPouch?250:cookedPulse?400:pack),serving:microwave?125:kind==='lentils'&&cookedPulse?200:kind==='beans'&&/dry|dried/i.test(i.name)?60:serving,assumed,spicy:/chilli|chili|spicy|hot sauce/i.test(i.name)};
+ const dry=/dry|dried/i.test(i.name);
+ return {kind,grams:grams??(microwave||beanPouch?250:cookedPulse?400:pack),dry,cookedPulse,serving:microwave?125:kind==='lentils'&&cookedPulse?200:['beans','chickpeas'].includes(kind)&&dry?60:serving,assumed,spicy:/chilli|chili|spicy|hot sauce/i.test(i.name)};
 }
 function household(s){const count=(v,f)=>Number.isInteger(Number(v))&&Number(v)>=0?Number(v):f;const adults=count(s.adults,count(s.people,4)),kids=count(s.kids,0),childPortion=Number(s.childPortion)>0?Number(s.childPortion):0.6;return {adults,kids,childPortion,people:adults+kids,equivalents:adults+kids*childPortion};}
 function suggest(items,settings){
@@ -25,7 +26,7 @@ function suggest(items,settings){
      variants=variants.flatMap(entries=>groups[kind].slice(0,4).map(e=>[...entries,e])).slice(0,8);
    }
    for(const entries of variants){
-     out.push({id:'auto:'+entries.map(e=>e.i.id).join(':'),name:spec.name,note:spec.note,method:spec.method,source:spec.source,portions:1,spicy:entries.some(e=>e.p.spicy),ingredients:entries.map(({i,p})=>({itemId:i.id,amount:((p.kind==='beans'&&/dry|dried/i.test(i.name))?60:(spec.grams[p.kind]??p.serving))/p.grams}))});
+     out.push({id:'auto:'+spec.key+':'+entries.map(e=>e.i.id).join(':'),name:spec.name,note:spec.note,method:spec.method,source:spec.source,portions:1,spicy:entries.some(e=>e.p.spicy),ingredients:entries.map(({i,p})=>({itemId:i.id,amount:(p.kind==='rice'&&p.serving===125?125:p.kind==='lentils'&&p.cookedPulse?160:['beans','chickpeas'].includes(p.kind)&&p.dry?60:(spec.grams[p.kind]??p.serving))/p.grams}))});
      if(out.length>=100)break recipes;
    }
  }
@@ -41,10 +42,6 @@ function suggest(items,settings){
    if(r.spicy||!r.ingredients.every(ing=>acceptedIds.has(ing.itemId)))continue;
    if(mode==='plain'&&r.ingredients.length>1)continue;
    kids.push({...r,id:r.id+':kids',audience:'kids',name:mode==='separate'&&r.ingredients.length>1?r.name+' (served separately)':r.name,note:r.note+' '+(mode==='separate'?'Keep each ingredient separate on the plate; offer sauce at the side.':'Try a simple, mild preparation; check whether your children will eat it.')});
- }
- for(const kind of ['pasta','rice','oats'])for(const {i,p} of groups[kind]||[]){
-   if(p.spicy||!acceptedIds.has(i.id))continue;
-   kids.push({id:'plain:'+i.id+':kids',name:kind==='oats'?'Plain porridge with water':'Plain '+kind,audience:'kids',portions:1,note:'A simple fallback to try. No sauce, seasoning or extras assumed. This alone is not a balanced meal.',ingredients:[{itemId:i.id,amount:p.serving/p.grams}]});
  }
  // Alternate child and adult options so shared staples cannot all go to adults first.
  const combined=[];for(let i=0;i<Math.max(adult.length,kids.length);i++){if(kids[i])combined.push(kids[i]);if(adult[i])combined.push(adult[i]);}
