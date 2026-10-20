@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {readFile} from 'node:fs/promises';
 import {createServer} from 'node:http';
 import {chromium,devices} from 'playwright';
@@ -32,9 +34,10 @@ test('Android-sized stock entry, portions, water, undo, bulk editing and storage
  await page.getByText('Dates & water details',{exact:true}).click();await page.locator('#f_potable').selectOption('yes');await page.locator('#itemForm').getByRole('button',{name:'Save',exact:true}).click();
  await page.locator('.nav [data-tab=meals]').click();await page.locator('#planDays').selectOption('21');await page.locator('#planMode').selectOption('none');await page.getByText('Day-by-day simulation',{exact:true}).click();assert.equal(await page.getByRole('heading',{name:'Day 21',exact:true}).count(),1);
  await page.locator('.nav [data-tab=settings]').click();await page.getByRole('button',{name:'Stock rotation',exact:true}).click();await page.getByRole('button',{name:'Recently used',exact:true}).click();
- await page.locator('.nav [data-tab=overview]').click();assert.match(await page.locator('.coverage-grid').textContent(),/21 days/);
+ await page.locator('.nav [data-tab=inventory]').click();await page.getByRole('button',{name:'Microwave rice',exact:true}).click();await page.locator('#f_current').fill('15');await page.locator('#itemForm').getByRole('button',{name:'Save',exact:true}).click();
+ await page.locator('.nav [data-tab=overview]').click();assert.equal(await page.locator('.coverage-number').first().textContent(),'2.5 days');assert.match(await page.locator('.coverage-grid').textContent(),/30 portions ÷ 4 people ÷ 3 meals/);assert.match(await page.locator('#screen').textContent(),/Unverified — no complete meals allocated/);assert.match(await page.locator('.coverage-grid').textContent(),/21 days/);
  for(const width of [320,390,844,1280]){await page.setViewportSize({width,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
- await page.setViewportSize({width:390,height:844});await page.screenshot({path:'/workspace/scratch/reserves-dashboard.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:process.env.RESERVES_SCREENSHOT_PATH||join(tmpdir(),'reserves-dashboard.png'),fullPage:true});
  // A failed storage write must keep the form available and show its error inside it.
  await page.getByRole('button',{name:'＋ Add item',exact:true}).click();await page.locator('#f_name').fill('Unsaved record');
  await page.evaluate(()=>{Storage.prototype.setItem=function(){throw Error('QuotaExceededError');}});
