@@ -36,7 +36,7 @@ or manufacture serving information.
 
 ## Coverage method and limits
 
-The dashboard allocates only explicitly recorded complete meals and saved recipes
+The separate complete-meal calculation allocates only explicitly recorded complete meals and saved recipes
 with a meal occasion and cooking requirement. Each batch deducts its required
 quantities from a **simulation pool**, never real inventory. Duplicate ingredient
 rows are summed. A complete meal stock line and a recipe using that line compete
@@ -52,7 +52,7 @@ fraction. Example: four adults with 12 breakfasts, 8 lunches and 40 dinners have
 **80 side portions and no complete meal days** until combined in recorded meals.
 
 Missing meal metadata stays unverified; no complete meals shows a dash on the
-headline. Previous name-based automatic recipe ideas remain available as
+complete-meal figure. Previous name-based automatic recipe ideas remain available as
 unverified alternatives, outside dashboard totals. Users can review an idea and
 save an editable recipe. Legacy manual capacity is also shown as a separate
 alternative, not added to dashboard totals.
@@ -134,3 +134,26 @@ asset set (check `Inventory/app.css` additionally). The Reserves service-worker
 cache advances to v11. Open the same Reserves URL on Android, check saved stock,
 export a backup, and verify food/water calculations and an add/use/undo round trip.
 A pushed branch or successful PR checks alone does not mean the app is live.
+
+## Portion headline correction
+
+The headline now uses available recorded portions divided by household headcount
+and meals per person daily. Thirty servings / four people / three meals =
+**2.5 rough days**, even when the servings are sides. This treats each person,
+including children, as needing one recorded serving per meal; it does not reduce
+the denominator for child-sized portions. Changing quantities or meal rate
+updates both the total and the estimate. Unknown serving counts and stock excluded
+by the existing planning-date policy contribute nothing.
+
+The dashboard labels this **Portion-based food estimate**, warns that it includes
+sides, and shows its arithmetic. Dietary suitability, calories, cooking and meal
+balance are not verified by this rough comparison. The stricter complete-meal
+calculation remains separate below and still checks meal occasions, recipes and
+shared ingredients. These are alternative views of the same stock, never added
+together. No quantities, records or settings are migrated or rewritten.
+
+Validation for this correction: 73 unit tests and the Android-sized Reserves
+browser flow pass, including the 30-portion/2.5-day case and independent
+unverified complete-meal status. The browser test screenshot now uses a portable
+temporary path (or RESERVES_SCREENSHOT_PATH), fixing the previous PR's CI-only
+workspace-path failure. Service-worker cache advances to v12.

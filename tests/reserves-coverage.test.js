@@ -56,3 +56,24 @@ test('minimal heating and household-specific dietary restrictions are conservati
  const i=stock('a',{current:4,portionType:'meal',portionsPerPack:1,mealSlot:'dinner',preparation:'heat',diet:'vegan, gluten-free'}),s={...settings,mealsPerDay:1,adultDiet:'gluten-free',childDiet:'nut-free',kids:1,adults:3};
  assert.equal(C.allocate([i],[],s,'heat').portions,0);i.diet+=', nut-free';assert.equal(C.allocate([i],[],s,'heat').portions,4);assert.equal(C.allocate([i],[],s,'none').portions,0);i.kidPreference='no';assert.equal(C.allocate([i],[],s).portions,0);
 });
+test('30 recorded side portions contribute 2.5 rough days for four people at three meals',()=>{
+ const items=[stock('rice',{current:15,portionsPerPack:2,portionType:'side'})],before=JSON.stringify(items);
+ const estimate=C.portionEstimate(items,settings);
+ assert.equal(estimate.total,30);assert.equal(estimate.sides,30);assert.equal(estimate.days,2.5);
+ assert.equal(C.allocate(items,[],settings).days,0);assert.equal(JSON.stringify(items),before);
+});
+test('rough portion days use household size and meal rate without reducing child servings',()=>{
+ const items=[stock('food',{current:30,portionsPerPack:1})];
+ assert.equal(C.portionEstimate(items,{adults:2,kids:2,childPortion:.6,mealsPerDay:3}).days,2.5);
+ assert.equal(C.portionEstimate(items,{people:2,mealsPerDay:2}).days,7.5);
+ assert.equal(C.portionEstimate(items,{people:5,mealsPerDay:1}).days,6);
+});
+test('rough estimate excludes unusable or missing serving data but includes unclassified servings',()=>{
+ const items=[stock('valid',{current:5,portionsPerPack:2}),stock('expired',{current:100,portionsPerPack:2,dateType:'useby',expiry:'2000-01-01'}),stock('unknown',{current:6}),stock('empty',{current:0,portionsPerPack:100})];
+ const e=C.portionEstimate(items,settings);assert.equal(e.total,10);assert.equal(e.unclassified,10);assert.equal(e.missing,1);
+ assert.equal(C.portionEstimate([],settings).days,0);
+});
+test('complete meal portions can contribute to both alternative estimates without summing them',()=>{
+ const items=['breakfast','lunch','dinner'].map(slot=>stock(slot,{current:12,portionsPerPack:1,portionType:'meal',mealSlot:slot}));
+ assert.equal(C.portionEstimate(items,settings).days,3);assert.equal(C.allocate(items,[],settings).days,3);
+});

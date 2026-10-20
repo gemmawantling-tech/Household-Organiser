@@ -84,6 +84,16 @@ root.ReservesPlanner={profile,household,suggest,preparation,nearly};
  function usable(i,today=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)){
   return positive(i.current)>0&&!(i.expiry&&i.expiry<today&&(i.dateType!=='bestbefore'||i.reviewedBestBefore!=='yes'));
  }
+ function portionEstimate(items,s){
+  const available=items.filter(i=>usable(i));
+  const total=available.reduce((sum,i)=>sum+portions(i),0);
+  const people=root.ReservesPlanner.household(s).people,mealsPerDay=positive(s.mealsPerDay)||3;
+  return {total,people,mealsPerDay,days:people?total/(people*mealsPerDay):0,
+   sides:available.filter(i=>i.portionType==='side').reduce((sum,i)=>sum+portions(i),0),
+   meals:available.filter(i=>i.portionType==='meal').reduce((sum,i)=>sum+portions(i),0),
+   unclassified:available.filter(i=>!['side','meal'].includes(i.portionType)).reduce((sum,i)=>sum+portions(i),0),
+   missing:available.filter(i=>!positive(i.portionsPerPack)).length};
+ }
  function allocate(items,recipes,s,mode='normal'){
   const h=root.ReservesPlanner.household(s),remaining=Object.fromEntries(items.map(i=>[i.id,usable(i)?positive(i.current):0])),byId=Object.fromEntries(items.map(i=>[i.id,i]));
   const diet=s.diet||'any',slots={breakfast:0,lunch:0,dinner:0},used={},allocations=[];
@@ -111,5 +121,5 @@ root.ReservesPlanner={profile,household,suggest,preparation,nearly};
  return Array.from({length:days},(_,index)=>({day:index+1,meals:slots.map(slot=>{let need=h.equivalents;const dishes=[];for(const batch of pool){if(batch.slot!==slot||batch.portions<=0)continue;const take=Math.min(need,batch.portions);if(take<=0)break;batch.portions-=take;need-=take;dishes.push({name:batch.name,portions:take});}return {slot,dishes,shortfall:need};})}));
  }
  function adjust(i,delta){return {...i,current:Math.max(0,Math.round((positive(i.current)+delta)*1000)/1000)};}
- root.ReservesCoverage={litres,water,portions,usable,allocate,simulate,adjust};
+ root.ReservesCoverage={litres,water,portions,usable,portionEstimate,allocate,simulate,adjust};
 })(globalThis);
