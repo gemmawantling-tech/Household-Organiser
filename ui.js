@@ -56,14 +56,10 @@
   calendar.innerHTML =
     '<h2 class="view-title">Family calendar</h2><section class="card"><div class="calendar-head"><button id="calendarPrev" aria-label="Previous calendar period">‹</button><h2 id="calendarTitle"></h2><button id="calendarNext" aria-label="Next calendar period">›</button></div><div class="segmented" role="group" aria-label="Calendar view"><button data-calendar-view="day">Day</button><button data-calendar-view="week">Week</button><button data-calendar-view="month">Month</button></div><div class="row"><button id="calendarToday">Today</button><p id="calendarHint" class="notice">Tap a date or event to open it.</p></div><div id="calendarGrid"></div><div id="calendarAgenda"></div></section>';
   lists.append(el("h2", "view-title", "Lists & supplies"), $("shoppingCard"));
-  const reserves = el("section", "card settings-links");
-  reserves.innerHTML =
-    '<a href="./Inventory/">Home Reserves <span class="muted">— stock & meals ↗</span></a>';
-  lists.append(reserves);
   more.append(el("h2", "view-title", "Your household"));
   const tools = el("section", "card settings-links");
   tools.innerHTML =
-    '<button id="openAudit">Monthly preparedness audit</button><button id="checkUpdates">Check for app updates</button><a href="./Inventory/">Home Reserves</a><a href="./Family/">Earlier Family view</a>';
+    '<button id="openAudit">Monthly preparedness audit</button><button id="checkUpdates">Check for app updates</button><a href="./Family/">Earlier Family view</a>';
   more.append(tools, $("backupCard"));
   const legacyNotice=el("p","settings-note","A snapshot from the previous app was kept in Backups below. Review it if any earlier device-only edits are missing.");legacyNotice.id="legacyRecoveryNotice";legacyNotice.hidden=true;$("backupCard").prepend(legacyNotice);
   const recoveries = el("details");
