@@ -98,7 +98,7 @@ test('mobile event and dated carry-over flows preserve shared tasks and attachme
     }
     assert.equal(new Set(colours).size,3);assert.equal(await row.getAttribute('data-owner'),'Ben');
     await page.getByRole('button',{name:"Ben's",exact:true}).click();assert.equal(await row.count(),1);
-    await page.getByRole('button',{name:'Mine',exact:true}).click();assert.equal(await row.count(),0);
+    await page.getByRole('button',{name:'Gemma',exact:true}).click();assert.equal(await row.count(),0);
     await page.getByRole('button',{name:'Everyone',exact:true}).click();
     await row.locator('.task-actions summary').click();await row.getByTitle('Edit task').click();await page.locator('#editText').fill('Dentist booking edited');await page.locator('#editor').getByRole('button',{name:'Save',exact:true}).click();await page.locator('#modal').waitFor({state:'hidden'});
     row=page.locator('#focusItems .task').filter({hasText:'Dentist booking edited'});assert.equal(await row.count(),1);
