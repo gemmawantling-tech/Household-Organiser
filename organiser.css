@@ -731,3 +731,10 @@ dialog::backdrop {
     min-height: 64px;
   }
 }
+
+#weekItems .upcoming-remove {
+  margin-left: auto;
+  min-height: 44px;
+  color: #8a3030;
+  font-size: 0.85rem;
+}
