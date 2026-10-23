@@ -738,3 +738,10 @@ dialog::backdrop {
   color: #8a3030;
   font-size: 0.85rem;
 }
+
+#weekItems .upcoming-entry {
+  max-width: 100%;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
