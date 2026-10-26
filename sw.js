@@ -1,10 +1,13 @@
 /* Public app shell only. Household data and attachments are never cached here. */
-const CACHE = "household-organiser-ux-20261023-3";
+const CACHE = "household-organiser-ux-20261026-gifts-1";
 const ROOT = new URL("./", self.location.href);
 const FILES = [
   "./",
   "./index.html",
   "./events.js",
+  "./gifts-model.js",
+  "./gifts-ui.js",
+  "./gifts-service.js",
   "./calendar.js",
   "./tasks.js",
   "./sync.js",

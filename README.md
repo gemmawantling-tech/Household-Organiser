@@ -10,6 +10,7 @@ and private Storage attachments. Reserves keeps its existing browser-local data.
 - [Firebase rules deployment](FIREBASE-DEPLOYMENT.md)
 - [Carry-over and owner colours](CARRYOVER.md)
 - [Home Reserves](Inventory/README.md)
+- [Gifts & occasions planner and required security deployment](docs/GIFTS-PLANNER.md)
 
 Development: Node 24 and Java 21. Run `npm ci --ignore-scripts`, `npm test`,
 `npm run test:rules` and `npm run test:browser` (install Chromium with

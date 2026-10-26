@@ -47,6 +47,20 @@ service cloud.firestore {
               && request.resource.data.inviteCode == get(/databases/$(database)/documents/households/$(hid)).data.inviteCode));
         allow update, delete: if false;
       }
+      // Separate documents are essential: Firestore cannot hide fields in shared data.
+      match /giftPlanners/{plannerId} {
+        function allowedPlanner() { return member(hid) && (plannerId == 'shared' || plannerId == request.auth.uid); }
+        allow get: if allowedPlanner();
+        allow list, delete: if false;
+        allow create, update: if allowedPlanner()
+          && request.resource.data.keys().hasOnly(['data', 'updatedAt'])
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.data.keys().hasOnly(['people','occasions','recipients','gifts'])
+          && request.resource.data.data.people is map
+          && request.resource.data.data.occasions is map
+          && request.resource.data.data.recipients is map
+          && request.resource.data.data.gifts is map;
+      }
       match /{collection}/{item} {
         allow read, write: if collection in ['tasks','reminders','events'] && member(hid);
       }
