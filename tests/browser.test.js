@@ -4,24 +4,9 @@ import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {chromium} from 'playwright';
-const seed={custom:{'2026-10-18|Today\'s Jobs':[{id:'keep-task',text:'Keep task'}]},completed:{keep:true},shopping:{},removed:{},starred:{},owners:{},events:[{id:'legacy',title:'Legacy booking',date:'2026-10-18',note:'Original notes',unknown:'keep'},{id:'birthday',title:'Birthday',date:'2000-10-18',repeat:'yearly'}]};
-const firestore=`
-const clone=x=>JSON.parse(JSON.stringify(x));
-globalThis.mockData=${JSON.stringify(seed)};
-let listener;
-const snapshot=()=>({exists:()=>true,data:()=>({data:clone(mockData)})});
-export const getFirestore=()=>({});export const enableMultiTabIndexedDbPersistence=async()=>{};
-export const doc=(...args)=>({parts:args.slice(1)});
-export const serverTimestamp=()=>0;
-export async function getDoc(ref){return ref.parts[0]==='profiles'?{exists:()=>true,data:()=>({householdId:'shared'})}:snapshot()}
-export const setDoc=()=>{throw Error('Unexpected overwrite')};
-export function onSnapshot(ref,callback){listener=callback;callback(snapshot());return()=>{listener=null}}
-export async function runTransaction(db,fn){if(globalThis.mockOffline)throw Error('Offline');const result=await fn({get:async()=>snapshot(),update:(ref,patch)=>{if(patch['data.events'])mockData.events=clone(patch['data.events']);if(patch.data)mockData=clone(patch.data)},set:()=>{throw Error('Unexpected creation')}});listener?.(snapshot());return result}
-`;
-const auth=`export const getAuth=()=>({currentUser:{uid:'gemma',emailVerified:true}});export const onAuthStateChanged=(auth,fn)=>fn(auth.currentUser);export const signInWithEmailAndPassword=()=>{},createUserWithEmailAndPassword=()=>{},sendEmailVerification=()=>{},sendPasswordResetEmail=()=>{},signOut=()=>{},reload=()=>{};`;
-const storage=`export const getStorage=()=>({});export const ref=(s,path)=>({fullPath:path});globalThis.mockFiles=new Map();export const uploadBytes=async(ref,file)=>{mockFiles.set(ref.fullPath,file)};export const getBlob=async ref=>mockFiles.get(ref.fullPath);export const deleteObject=async ref=>mockFiles.delete(ref.fullPath);`;
+import {seed,firestore,auth,storage} from './helpers/firebase-mock.js';
 test('mobile event and dated carry-over flows preserve shared tasks and attachments',async()=>{
-  const server=createServer(async(req,res)=>{try{const path=new URL(req.url,'http://localhost').pathname;const file=path==='/'?'index.html':path.slice(1);if(!['index.html','events.js','calendar.js','tasks.js','sync.js','ui.js','updates.js','organiser.css','invitation.js','sw.js','manifest.webmanifest','icon-192.png','icon-512.png'].includes(file)){res.writeHead(404).end();return;}res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.png')?'image/png':file.endsWith('.webmanifest')?'application/manifest+json':'text/html');res.end(await readFile(file));}catch{res.writeHead(500).end()}});
+  const server=createServer(async(req,res)=>{try{const path=new URL(req.url,'http://localhost').pathname;const file=path==='/'?'index.html':path.slice(1);if(!['index.html','events.js','gifts-model.js','gifts-ui.js','gifts-service.js','calendar.js','tasks.js','sync.js','ui.js','updates.js','organiser.css','invitation.js','sw.js','manifest.webmanifest','icon-192.png','icon-512.png'].includes(file)){res.writeHead(404).end();return;}res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.png')?'image/png':file.endsWith('.webmanifest')?'application/manifest+json':'text/html');res.end(await readFile(file));}catch{res.writeHead(500).end()}});
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const browser=await chromium.launch({...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{}),args:['--no-sandbox']});
   try{
@@ -132,7 +117,7 @@ test('mobile event and dated carry-over flows preserve shared tasks and attachme
 test('warm PWA shell reopens offline with navigation and cached styles at narrow mobile width',async()=>{
   // This fixture replaces only Firebase bootstrap. It verifies the actual worker,
   // shell, local cached records and navigation without a production account.
-  const allowed=['index.html','events.js','calendar.js','tasks.js','sync.js','ui.js','updates.js','organiser.css','invitation.js','sw.js','manifest.webmanifest','icon-192.png','icon-512.png'];
+  const allowed=['index.html','events.js','gifts-model.js','gifts-ui.js','gifts-service.js','calendar.js','tasks.js','sync.js','ui.js','updates.js','organiser.css','invitation.js','sw.js','manifest.webmanifest','icon-192.png','icon-512.png'];
   const server=createServer(async(req,res)=>{try{const path=new URL(req.url,'http://localhost').pathname,file=path==='/'?'index.html':path.slice(1);if(!allowed.includes(file)){res.writeHead(404).end();return;}let body=await readFile(file);if(file==='index.html')body=body.toString().replace(/<script type="module">[\s\S]*?<\/script>/,'<script>document.getElementById("authGate").hidden=true;document.getElementById("householdApp").hidden=false;render();</script>');res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.png')?'image/png':file.endsWith('.webmanifest')?'application/manifest+json':'text/html');res.end(body)}catch{res.writeHead(500).end()}});
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const browser=await chromium.launch({...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{}),args:['--no-sandbox']});
   try{

@@ -23,6 +23,7 @@
   }
   const today = panel("Today"),
     calendar = panel("Calendar"),
+    gifts = panel("Gifts"),
     lists = panel("Lists"),
     more = panel("More"),
     audit = panel("Audit");
@@ -88,13 +89,17 @@
   const nav = el("nav", "bottom-nav");
   nav.setAttribute("aria-label", "Main navigation");
   nav.innerHTML =
-    '<button data-view="today"><span class="nav-icon" aria-hidden="true">⌂</span>Today</button><button data-view="calendar"><span class="nav-icon" aria-hidden="true">▦</span>Calendar</button><button id="globalAdd" aria-label="Add task or event"><span class="nav-icon" aria-hidden="true">＋</span>Add</button><button data-view="lists"><span class="nav-icon" aria-hidden="true">☷</span>Lists</button><button data-view="more"><span class="nav-icon" aria-hidden="true">•••</span>More</button>';
+    '<button data-view="today"><span class="nav-icon" aria-hidden="true">⌂</span>Today</button><button data-view="calendar"><span class="nav-icon" aria-hidden="true">▦</span>Calendar</button><button data-view="gifts"><span class="nav-icon" aria-hidden="true">🎁</span>Gifts</button><button data-view="lists"><span class="nav-icon" aria-hidden="true">☷</span>Lists</button><button data-view="more"><span class="nav-icon" aria-hidden="true">•••</span>More</button>';
   main.append(nav);
+  const floatingAdd = el("button", "floating-add", "＋ Add");
+  floatingAdd.id = "globalAdd";
+  floatingAdd.setAttribute("aria-label", "Add task or event");
+  main.append(floatingAdd);
   const addSheet = document.createElement("dialog");
   addSheet.id = "addSheet";
   addSheet.setAttribute("aria-labelledby", "addSheetTitle");
   addSheet.innerHTML =
-    '<h2 id="addSheetTitle">What would you like to add?</h2><p class="muted">A job to do, or a date to remember.</p><div class="stack"><button id="addTaskChoice">✓ &nbsp; Task or reminder</button><button id="addEventChoice">▦ &nbsp; Event, birthday or booking</button></div><button class="sheet-close" id="closeAddSheet">Cancel</button>';
+    '<h2 id="addSheetTitle">What would you like to add?</h2><p class="muted">A job to do, or a date to remember.</p><div class="stack"><button id="addTaskChoice">✓ &nbsp; Task or reminder</button><button id="addEventChoice">▦ &nbsp; Event, birthday or booking</button><button id="addGiftChoice">🎁 &nbsp; Gift or occasion</button></div><button class="sheet-close" id="closeAddSheet">Cancel</button>';
   document.body.append(addSheet);
   $("globalAdd").onclick = () => addSheet.showModal();
   $("closeAddSheet").onclick = () => addSheet.close();
@@ -106,7 +111,11 @@
     addSheet.close();
     openEditor("event");
   };
-  const viewPanels = { today, calendar, lists, more, audit };
+  $("addGiftChoice").onclick = () => {
+    addSheet.close();
+    window.GiftsUI?.addGift();
+  };
+  const viewPanels = { today, calendar, gifts, lists, more, audit };
   function show(name) {
     view = name;
     if (name === "today") selected = parseISO(iso(new Date()));
@@ -118,6 +127,7 @@
       today.insertBefore($("sections"), plans);
     }
     render();
+    if (name === "gifts") window.GiftsUI?.render();
     document.title =
       "Household Organiser · " + name.charAt(0).toUpperCase() + name.slice(1);
     viewPanels[name].focus({ preventScroll: true });

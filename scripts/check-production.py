@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--ref', default='origin/main')
 parser.add_argument('--base-url', default='https://gemmawantling-tech.github.io/Household-Organiser/')
 args = parser.parse_args()
-files = ['index.html', 'events.js', 'calendar.js', 'tasks.js', 'sync.js', 'ui.js',
+files = ['gifts-model.js', 'gifts-ui.js', 'gifts-service.js', 'index.html', 'events.js', 'calendar.js', 'tasks.js', 'sync.js', 'ui.js',
          'organiser.css', 'updates.js', 'sw.js', 'invitation.js', 'manifest.webmanifest',
          'Family/index.html', 'Family/family.js', 'Inventory/index.html',
          'Inventory/app.js', 'Inventory/planner.js', 'Inventory/recipe-library.js',

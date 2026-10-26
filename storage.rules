@@ -16,6 +16,21 @@ service firebase.storage {
       allow delete: if member(hid);
       allow update: if false;
     }
+    match /households/{hid}/giftPlanners/{plannerId}/{giftId}/{objectId} {
+      function plannerAccess() { return member(hid) && (plannerId == 'shared' || plannerId == request.auth.uid); }
+      function giftExists() {
+        return firestore.exists(/databases/(default)/documents/households/$(hid)/giftPlanners/$(plannerId))
+          && giftId in firestore.get(/databases/(default)/documents/households/$(hid)/giftPlanners/$(plannerId)).data.data.gifts;
+      }
+      allow read: if plannerAccess() && giftExists();
+      allow create: if plannerAccess() && giftExists() && resource == null
+        && request.resource.size > 0 && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType in ['application/pdf', 'image/png', 'image/jpeg', 'image/webp']
+        && objectId.matches('^[a-f0-9-]{36}$');
+      // Allow cleaning up an object after its gift was deleted; never expose it.
+      allow delete: if plannerAccess();
+      allow update: if false;
+    }
     // Other paths are denied by default. No anonymous or public access.
   }
 }
