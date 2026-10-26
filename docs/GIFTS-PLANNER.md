@@ -92,10 +92,10 @@ server scheduler: annual generation runs when an authorised app session is activ
    `home-organised` project. Preserve all existing membership and event rules.
    Firestore adds `giftPlanners` access without changing the original collections.
    Storage adds gift paths without changing event attachment paths.
-3. The existing GitHub **Firebase rules** workflow deploys **Firestore only**,
-   using its verify/live-hash/deploy process from `FIREBASE-DEPLOYMENT.md`.
-   Deploy Storage through the Firebase Console or an authorised Firebase CLI:
-   `firebase deploy --only storage --project home-organised`.
+3. Use the GitHub **Firebase rules** workflow and its verify/live-hash/deploy
+   process from `FIREBASE-DEPLOYMENT.md`. Select **firestore**, verify and deploy;
+   then select **storage**, verify and deploy with the Storage live fingerprint.
+   Both targets are manual operations on main; merging does not publish rules.
    Ensure the Storage rules service has the Firestore cross-service lookup
    permission described in `FIREBASE-DEPLOYMENT.md`; emulator success does not
    verify production IAM/CORS. Do not relax rules to resolve deployment problems.

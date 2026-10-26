@@ -14,6 +14,12 @@ on:
         options: [verify, deploy]
         default: verify
         required: true
+      rules_target:
+        description: 'Rules to verify or deploy (Storage includes gift and event attachments)'
+        type: choice
+        options: [firestore, storage]
+        default: firestore
+        required: true
       expected_live_sha256:
         description: 'For deploy: paste the live rules SHA-256 from a previous verify run'
         type: string
@@ -66,6 +72,7 @@ jobs:
           node-version: '24'
       - name: Validate deployment confirmation before sign-in
         env:
+          RULES_TARGET: ${{ inputs.rules_target || 'firestore' }}
           OPERATION: ${{ inputs.operation }}
           EXPECTED_LIVE_SHA256: ${{ inputs.expected_live_sha256 }}
         run: node scripts/deploy-rules.js --validate
@@ -81,6 +88,7 @@ jobs:
       - name: Verify access or publish rules
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          RULES_TARGET: ${{ inputs.rules_target || 'firestore' }}
           OPERATION: ${{ inputs.operation }}
           EXPECTED_LIVE_SHA256: ${{ inputs.expected_live_sha256 }}
         run: node scripts/deploy-rules.js

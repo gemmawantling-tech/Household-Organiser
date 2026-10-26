@@ -3,7 +3,14 @@ import {readFile, appendFile} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 
 const project = 'projects/home-organised';
-const releaseName = `${project}/releases/cloud.firestore`;
+const targets = {
+  firestore: {release: 'cloud.firestore', file: 'firestore.rules'},
+  storage: {release: 'firebase.storage/home-organised.firebasestorage.app', file: 'storage.rules'},
+};
+export function ruleTarget(target = 'firestore') {
+  if (!Object.hasOwn(targets, target)) throw Error('Choose firestore or storage.');
+  return targets[target];
+}
 const endpoint = 'https://firebaserules.googleapis.com/v1/';
 export const digest = text => createHash('sha256').update(text).digest('hex');
 export function validate(operation, expected) {
@@ -12,8 +19,9 @@ export function validate(operation, expected) {
     throw Error('Run verify first, then supply its live rules SHA-256 to deploy.');
   }
 }
-export async function processRules({operation, expected, token, source, request = fetch}) {
+export async function processRules({operation, expected, token, source, target = 'firestore', request = fetch}) {
   validate(operation, expected);
+  const config = ruleTarget(target), releaseName = `${project}/releases/${config.release}`;
   if (!token) throw Error('Google sign-in did not return an access token.');
   async function api(path, method = 'GET', body) {
     const response = await request(endpoint + path, {
@@ -44,7 +52,7 @@ export async function processRules({operation, expected, token, source, request 
   if (expected !== liveHash) throw Error('Live rules changed since verification. Run verify again before deploying.');
   if (liveHash === desiredHash) return {...result, unchanged: true};
   const created = await api(`${project}/rulesets`, 'POST', {
-    source: {files: [{name: 'firestore.rules', content: source}]},
+    source: {files: [{name: config.file, content: source}]},
   });
   if (!validRulesetName.test(created.name || '')) throw Error('Unexpected new ruleset name.');
   // Check again immediately before switching the release. Google Rules has no
@@ -61,11 +69,13 @@ export async function processRules({operation, expected, token, source, request 
 async function main() {
   const operation = process.env.OPERATION || 'verify';
   const expected = process.env.EXPECTED_LIVE_SHA256 || '';
+  const target = process.env.RULES_TARGET || 'firestore';
+  const config = ruleTarget(target);
   validate(operation, expected);
   if (process.argv.includes('--validate')) return;
-  const source = await readFile('firestore.rules', 'utf8');
-  const result = await processRules({operation, expected, source, token: process.env.GOOGLE_ACCESS_TOKEN});
-  const summary = `## Firebase rules: ${operation}\n\n` +
+  const source = await readFile(config.file, 'utf8');
+  const result = await processRules({operation, expected, source, target, token: process.env.GOOGLE_ACCESS_TOKEN});
+  const summary = `## Firebase ${target} rules: ${operation}\n\n` +
     `Live rules SHA-256 (use this for a subsequent deploy):\n\n\`${result.liveHash}\`\n\n` +
     `Repository rules SHA-256: \`${result.desiredHash}\`\n\n` +
     `Previous ruleset: \`${result.previousRuleset}\`\n\n` +

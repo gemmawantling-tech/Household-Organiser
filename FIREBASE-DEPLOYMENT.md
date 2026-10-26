@@ -10,13 +10,14 @@ Pages workflow. No frontend or live rules changes are included in this setup.
    workflow runs invitation, deployment and Firestore emulator tests without
    production credentials. Merge the reviewed change.
 2. In GitHub **Actions → Firebase rules → Run workflow**, choose branch **main**
-   and operation **verify**. This tests the rules and checks Google access with
+   and operation **verify**. Select **firestore** for planner records or **storage**
+   for gift/event attachment access. Verify and deploy each target separately. This tests the rules and checks Google access with
    GET requests to the Firebase Rules API. It does not publish anything.
 3. Review the rules change and verification summary. To publish, run the workflow
    again on **main**, choose **deploy**, and paste the live rules SHA-256 from the
    verification summary into **expected_live_sha256**. This is a fingerprint,
    not a password. Tests run again before sign-in. If the live rules changed
-   since verification, publishing stops. The source deployed is the `firestore.rules`
+   since verification, publishing stops. The source deployed is the selected `firestore.rules` or `storage.rules`
    in the workflow run's checked-out commit; confirm that commit is the one reviewed.
 
 Merging alone never deploys Firebase rules. The initial verify run must succeed
@@ -64,8 +65,16 @@ are locked, and GitHub Actions are pinned to immutable commits.
 
 ## Event attachment Storage rules
 
-The event attachment feature adds `storage.rules` and Storage emulator tests.
-The workflow above still verifies/deploys **Firestore only**, and never deploys
-Storage automatically. See [EVENT-ATTACHMENTS.md](EVENT-ATTACHMENTS.md) for the
-manual Storage permissions, service-agent, CORS and approval steps. No Firestore
-rule change is needed for this feature.
+Select **storage** in the same manual workflow to verify/deploy `storage.rules`
+for bucket `home-organised.firebasestorage.app`. The source includes both existing
+event attachment rules and the Gifts planner paths. Each target has its own live
+fingerprint: never reuse a Firestore fingerprint for a Storage deployment.
+The default remains Firestore, so existing workflow calls are unchanged. Only
+the selected release is updated; no bucket data or household documents are written.
+The workflow uses the existing short-lived identity and Firebase Rules Admin role,
+without adding credentials or broadening the main-branch trust condition.
+
+See [EVENT-ATTACHMENTS.md](EVENT-ATTACHMENTS.md) for Storage service-agent and CORS
+requirements. Rules publication does not grant cross-service Firestore lookup
+permissions or alter CORS. If verification fails, report the actual API/IAM error;
+do not weaken access rules.
