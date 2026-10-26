@@ -128,6 +128,14 @@ test("Gifts mobile planner: recipients, actions, joint costs, privacy, attachmen
     await dialog.getByLabel("Actual total cost (£, optional)").fill("180");
     await dialog.getByRole("button", { name: "Save", exact: true }).click();
     await dialog.waitFor({ state: "hidden" });
+    assert.equal(await page.locator(".gift-upcoming").count(), 0);
+    const actionsPanel = page.locator(".gift-outstanding");
+    await actionsPanel.locator("summary").click();
+    assert.equal(await actionsPanel.evaluate(n => n.open), false);
+    await page.getByRole("button", {name:"All", exact:true}).click();
+    assert.equal(await actionsPanel.evaluate(n => n.open), false);
+    await actionsPanel.locator("summary").click();
+    assert.equal(await actionsPanel.evaluate(n => n.open), true);
     assert.match(
       await page.locator(".gift-budget").textContent(),
       /£180.00.*£120.00/,

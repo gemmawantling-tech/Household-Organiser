@@ -1,5 +1,5 @@
 /* Public app shell only. Household data and attachments are never cached here. */
-const CACHE = "household-organiser-ux-20261026-gifts-1";
+const CACHE = "household-organiser-ux-20261026-gifts-2";
 const ROOT = new URL("./", self.location.href);
 const FILES = [
   "./",

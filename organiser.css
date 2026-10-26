@@ -765,8 +765,6 @@ dialog::backdrop {
 .gift-controls { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
 .gift-controls button,.gift-quiet { font-size:.82rem; }
 .gift-quiet { background:transparent; border:1px solid #dce4d8; }
-.gift-upcoming { padding:15px 0; border-bottom:1px solid var(--gift-line); }
-.gift-upcoming button { display:block; margin-top:8px; text-align:left; }
 .gift-outstanding { padding:20px 0; }
 .gift-outstanding h3 { margin-bottom:8px; }
 .gift-outstanding h4 { font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; margin:20px 0 6px; }
@@ -810,3 +808,5 @@ dialog::backdrop {
 .gift-editor-footer { display:flex; gap:10px; position:sticky; bottom:-22px; background:#fff; padding:14px 0; margin-top:10px; }
 .gift-editor-footer button { flex:1; }
 @media(max-width:360px) { .gift-hero { padding:18px 14px; } .gift-recipient { padding:12px; } #giftDialog { padding:16px; } .gift-stats { gap:6px; } }
+
+.gift-outstanding > summary { min-height:44px; display:flex; align-items:center; font-size:1.05rem; }
