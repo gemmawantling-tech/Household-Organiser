@@ -6,6 +6,7 @@
     uid = () => crypto.randomUUID();
   const root = $("panelGifts");
   const openFiles = new Set();
+  const actionPanels = new Map();
   let scope = "shared",
     selectedId = null,
     filter = "outstanding",
@@ -1055,22 +1056,14 @@
         ),
       );
     root.append(hero);
-    const upcoming = node("details", "gift-upcoming");
-    upcoming.append(
-      node("summary", "", "Upcoming occasions · " + future.length),
-    );
-    for (const o of future.slice(0, 8))
-      upcoming.append(
-        button(o.name + " · " + dateLabel(o.date), () => {
-          selectedId = o.id;
-          expanded = null;
-          render();
-        }),
-      );
-    root.append(upcoming);
-    const tasks = node("section", "gift-outstanding");
-    tasks.append(node("h3", "", "The little things left to do"));
+    const tasks = node("details", "gift-outstanding");
+    const panelKey = scope + ":" + selectedId;
+    tasks.open = actionPanels.get(panelKey) ?? true;
+    tasks.ontoggle = () => {
+      if (tasks.isConnected) actionPanels.set(panelKey, tasks.open);
+    };
     const actions = G.outstanding(data(), today());
+    tasks.append(node("summary", "", "The little things left to do · " + actions.length));
     let group = "";
     for (const a of actions) {
       if (a.urgency !== group) {
